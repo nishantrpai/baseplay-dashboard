@@ -43,7 +43,7 @@
       <p class="text-gray-400 mb-2" id="gameDescription">Game Description</p>
       <img id="gameImage" src="" alt="Game Preview" class="mb-4 w-full" />
       <button id="playGameBtn"
-        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors w-full">
+        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors w-full text-sm">
         <i data-feather="plus" class="mr-2"></i>
         Play Game
       </button>
@@ -221,7 +221,7 @@
 
       const gameName = await gameContract.methods.getGameName().call();
       const gameDescription = await gameContract.methods.getGameDescription().call();
-      const gameLink = await gameContract.methods.getGameLink().call();
+      let gameLink = await gameContract.methods.getGameLink().call();
 
       document.getElementById('gameTitle').innerText = gameName;
       document.getElementById('gameDescription').innerText = gameDescription;
@@ -234,6 +234,11 @@
       if (!gameLink) {
         document.getElementById('gameImage').style.display = 'none';
       }
+
+      // Set playGameBtn link to gameLink
+      document.getElementById('playGameBtn').onclick = function() {
+        window.location.href = gameLink;
+      };
 
       // Load leaderboard data
       await loadLeaderboard();
@@ -267,11 +272,19 @@
 
       for (let i = 0; i < names.length; i++) {
         const achievementElement = document.createElement('div');
-        achievementElement.className = 'flex items-center mb-4';
+        achievementElement.className = 'flex items-center';
+        const progressBarWidth = (playerCounts[i] / totalPlayers) * 100;
         achievementElement.innerHTML = `
-                    <img src="${badges[i]}" alt="${descriptions[i]}" class="w-8 h-8 mr-4">
-                    <span>${names[i]}: ${descriptions[i]} (${playerCounts[i]}/${totalPlayers} players)</span>
-                `;
+          <img src="${badges[i]}" alt="${descriptions[i]}" class="w-8 h-8 mr-4">
+          <div class="flex flex-col w-full">
+            <span class="font-bold">${names[i]}</span>
+            <p class="text-sm text-gray-500">${descriptions[i]}</p>
+            <div class="w-full bg-gray-200 h-1 my-2">
+              <div class="bg-blue-500 h-1" style="width: ${progressBarWidth}%;"></div>
+            </div>
+            <span class="text-xs text-gray-500 float-right">${playerCounts[i]}  / ${totalPlayers} players </span>
+          </div>
+        `;
         achievementsContainer.appendChild(achievementElement);
       }
     }
