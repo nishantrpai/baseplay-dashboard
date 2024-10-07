@@ -29,7 +29,7 @@
         </div>
 
         <h2 class="text-2xl font-bold mb-4">Leaderboard</h2>
-        <div id="leaderboard" class="bg-black p-4 rounded-lg shadow border border-gray-900">
+        <div id="leaderboard" class="bg-black p-4 rounded-lg shadow border border-gray-900 mb-8">
             <table class="w-full">
                 <thead>
                     <tr>
@@ -41,6 +41,11 @@
                     <!-- Leaderboard entries will be populated here -->
                 </tbody>
             </table>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4">Achievements</h2>
+        <div id="achievements" class="bg-black p-4 rounded-lg shadow border border-gray-900">
+            <!-- Achievements will be populated here -->
         </div>
     </div>
 
@@ -70,6 +75,9 @@
 
             // Load leaderboard data
             await loadLeaderboard(gameId);
+
+            // Load achievements data
+            await loadAchievements(gameId);
         }
 
         async function loadLeaderboard(gameId) {
@@ -87,6 +95,28 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `<td class="py-2">${entry.player}</td><td class="py-2">${entry.score}</td>`;
                 leaderboardBody.appendChild(row);
+            });
+        }
+
+        async function loadAchievements(gameId) {
+            // Fetch achievements data from the server or blockchain
+            // This is a placeholder for the actual fetch logic
+            const achievementsData = [
+                { id: 1, description: "First Win", imageURI: "https://example.com/achievement1.png" },
+                { id: 2, description: "High Score", imageURI: "https://example.com/achievement2.png" },
+                { id: 3, description: "Perfect Game", imageURI: "https://example.com/achievement3.png" }
+            ];
+
+            const achievementsContainer = document.getElementById('achievements');
+            achievementsContainer.innerHTML = '';
+            achievementsData.forEach(achievement => {
+                const achievementElement = document.createElement('div');
+                achievementElement.className = 'flex items-center mb-4';
+                achievementElement.innerHTML = `
+                    <img src="${achievement.imageURI}" alt="${achievement.description}" class="w-8 h-8 mr-4">
+                    <span>${achievement.description}</span>
+                `;
+                achievementsContainer.appendChild(achievementElement);
             });
         }
 

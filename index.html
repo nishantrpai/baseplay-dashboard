@@ -1,213 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baseplay</title>
-    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.0.0/dist/ethers.umd.min.js"></script>
-    <script src="https://unpkg.com/feather-icons"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jdenticon@3.1.0/dist/jdenticon.min.js" async
-        integrity="sha384-VngWWnG9GS4jDgsGEUNaoRQtfBGiIKZTiXwm9KpgAeaRn6Y/1tAFiyXqSzqC8Ga/"
-        crossorigin="anonymous">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baseplay</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.0.0/dist/ethers.umd.min.js"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jdenticon@3.1.0/dist/jdenticon.min.js" async
+    integrity="sha384-VngWWnG9GS4jDgsGEUNaoRQtfBGiIKZTiXwm9KpgAeaRn6Y/1tAFiyXqSzqC8Ga/" crossorigin="anonymous">
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .transition-colors {
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        .border-gray-900 {
-            border: 1px solid #333 !important;
-        }
-    </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .transition-colors {
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .border-gray-900 {
+      border: 1px solid #333 !important;
+    }
+  </style>
 </head>
+
 <body class="bg-black text-white min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <header class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-bold">Baseplay</h1>
-            <button id="connectWallet" class="bg-gray-900 text-white px-4 py-2 rounded-full flex items-center transition-colors">
-                <i data-feather="link" class="mr-2"></i>
-                <span>Connect Wallet</span>
-            </button>
-        </header>
+  <div class="container mx-auto px-4 py-8">
+    <header class="flex justify-between items-center mb-8">
+      <h1 class="text-2xl font-bold">Baseplay</h1>
+      <button id="connectWallet"
+        class="bg-gray-900 text-white px-4 py-2 rounded-full flex items-center transition-colors">
+        <i data-feather="link" class="mr-2"></i>
+        <span>Connect Wallet</span>
+      </button>
+    </header>
 
-        <div class="flex space-x-4 absolute top-24 right-20">
-            <button id="createGameBtn" class="rounded-full flex items-center text-sm bg-black hover:bg-gray-800 text-white font-bold py-2 px-4 transition-colors">
-                <i data-feather="plus" class="mr-2"></i>
-                Submit Game
-            </button>
+    <div class="flex space-x-4 absolute top-24 right-20">
+      <button id="createGameBtn"
+        class="rounded-full flex items-center text-sm bg-black hover:bg-gray-800 text-white font-bold py-2 px-4 transition-colors">
+        <i data-feather="plus" class="mr-2"></i>
+        Submit Game
+      </button>
 
-            <button id="myGamesBtn" class="rounded-full flex items-center text-sm bg-black  hover:bg-gray-800 text-white font-bold py-2 px-4 transition-colors" onclick="window.location.href='game.html?gameId=myGameId'">
-                <i data-feather="list" class="mr-2"></i>
-                My Games
-            </button>
-        </div>
-
-        <div id="createGameModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full">
-            <div class="relative top-20 mx-auto p-5 w-96 shadow-lg rounded-md bg-black border border-gray-900">
-                <h3 class="text-sm font-bold mb-4">Create New Game</h3>
-                <input type="text" id="gameName" placeholder="Game Name" class="w-full p-2 mb-4 bg-black border border-gray-900 rounded text-sm outline-none">
-                <input type="text" id="gameDescription" placeholder="Game Description" class="w-full p-2 mb-4 bg-black border border-gray-900 rounded text-sm outline-none">
-                <div class="flex justify-end">
-                    <button id="cancelCreate" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2 transition-colors">Cancel</button>
-                    <button id="createGame" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors">Create Game</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="allGames" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      <button id="myGamesBtn"
+        class="rounded-full flex items-center text-sm bg-black  hover:bg-gray-800 text-white font-bold py-2 px-4 transition-colors"
+        onclick="window.location.href='game.html?gameId=myGameId'">
+        <i data-feather="list" class="mr-2"></i>
+        My Games
+      </button>
     </div>
 
-    <script>
-        const gameFactoryAddress = '0x47B7C9AdA59968C8DD651492DBE8707A89A126bF';
-        const gameFactoryABI = [
-            {
-                "inputs": [
-                    {
-                        "internalType": "string",
-                        "name": "_gameName",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "string",
-                        "name": "_gameDescription",
-                        "type": "string"
-                    }
-                ],
-                "name": "createGame",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "getAllGames",
-                "outputs": [
-                    {
-                        "components": [
-                            {
-                                "internalType": "address",
-                                "name": "gameAddress",
-                                "type": "address"
-                            },
-                            {
-                                "internalType": "string",
-                                "name": "gameName",
-                                "type": "string"
-                            },
-                            {
-                                "internalType": "string",
-                                "name": "gameDescription",
-                                "type": "string"
-                            }
-                        ],
-                        "internalType": "struct GameFactory.GameInfo[]",
-                        "name": "",
-                        "type": "tuple[]"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            }
-        ];
+    <div id="createGameModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full">
+      <div class="relative top-20 mx-auto p-5 w-96 shadow-lg rounded-md bg-black border border-gray-900">
+        <h3 class="text-sm font-bold mb-4">Create New Game</h3>
+        <input type="text" id="gameName" placeholder="Game Name"
+          class="w-full p-2 mb-4 bg-black border border-gray-900 rounded text-sm outline-none">
+        <input type="text" id="gameDescription" placeholder="Game Description (140 chars max)"
+          class="w-full p-2 mb-4 bg-black border border-gray-900 rounded text-sm outline-none">
+        <div class="flex justify-end">
+          <button id="cancelCreate"
+            class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2 transition-colors">Cancel</button>
+          <button id="createGame"
+            class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors">Create
+            Game</button>
+        </div>
+      </div>
+    </div>
 
-        let web3;
-        let gameFactoryContract;
-        let userAddress;
+    <div id="allGames" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </div>
 
-        async function connectWallet() {
-            if (window.ethereum) {
-                web3 = new Web3(window.ethereum);
-                try {
-                    await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    const accounts = await web3.eth.getAccounts();
-                    userAddress = accounts[0];
-                    const chainId = await web3.eth.getChainId();
-                    if (chainId !== 84532) { // Base Sepolia testnet chain ID
-                        alert('Please switch to the Base Sepolia testnet');
-                        return;
-                    }
-                    gameFactoryContract = new web3.eth.Contract(gameFactoryABI, gameFactoryAddress);
-                    document.getElementById('connectWallet').innerHTML = `<i data-feather="user" class="mr-2"></i><span>${userAddress.slice(0, 6)}...${userAddress.slice(-4)}</span>`;
-                    feather.replace();
-                    await loadGames();
-                } catch (error) {
-                    console.error("Failed to connect wallet:", error);
-                    alert('Failed to connect wallet');
-                }
-            } else {
-                alert('Please install MetaMask');
-            }
+  <script>
+    const gameFactoryAddress = '0x32af6d0b649f3336f36c5C6177b6a88Bff579dd8';
+    const gameFactoryABI = [
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "_gameName",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_gameDescription",
+            "type": "string"
+          }
+        ],
+        "name": "createGame",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getAllGames",
+        "outputs": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "gameAddress",
+                "type": "address"
+              },
+              {
+                "internalType": "string",
+                "name": "gameName",
+                "type": "string"
+              },
+              {
+                "internalType": "string",
+                "name": "gameDescription",
+                "type": "string"
+              }
+            ],
+            "internalType": "struct GameFactory.GameInfo[]",
+            "name": "",
+            "type": "tuple[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "index",
+            "type": "uint256"
+          }
+        ],
+        "name": "getGameDescription",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "index",
+            "type": "uint256"
+          }
+        ],
+        "name": "getGameName",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ];
+
+    let web3;
+    let gameFactoryContract;
+    let userAddress;
+
+    async function connectWallet() {
+      if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        try {
+          await window.ethereum.request({ method: 'eth_requestAccounts' });
+          const accounts = await web3.eth.getAccounts();
+          userAddress = accounts[0];
+          const chainId = await web3.eth.getChainId();
+          if (chainId !== 84532) { // Base Sepolia testnet chain ID
+            alert('Please switch to the Base Sepolia testnet');
+            return;
+          }
+          gameFactoryContract = new web3.eth.Contract(gameFactoryABI, gameFactoryAddress);
+          document.getElementById('connectWallet').innerHTML = `<i data-feather="user" class="mr-2"></i><span>${userAddress.slice(0, 6)}...${userAddress.slice(-4)}</span>`;
+          feather.replace();
+          await loadGames();
+        } catch (error) {
+          console.error("Failed to connect wallet:", error);
+          alert('Failed to connect wallet');
         }
+      } else {
+        alert('Please install MetaMask');
+      }
+    }
 
-        async function createGame() {
-            if (!userAddress) {
-                alert('Please connect your wallet first');
-                return;
-            }
-            const gameName = document.getElementById('gameName').value;
-            const gameDescription = document.getElementById('gameDescription').value;
-            try {
-                await gameFactoryContract.methods.createGame(gameName, gameDescription).send({ from: userAddress });
-                alert('Game created successfully!');
-                await loadGames();
-                toggleCreateGameModal();
-            } catch (error) {
-                console.error("Failed to create game:", error);
-                alert('Failed to create game. Check console for details.');
-            }
+    async function createGame() {
+      if (!userAddress) {
+        alert('Please connect your wallet first');
+        return;
+      }
+      const gameName = document.getElementById('gameName').value;
+      const gameDescription = document.getElementById('gameDescription').value;
+      if (gameDescription.length > 140) {
+        alert('Game description must be 140 characters or less');
+        return;
+      }
+      try {
+        await gameFactoryContract.methods.createGame(gameName, gameDescription).send({ from: userAddress });
+        alert('Game created successfully!');
+        await loadGames();
+        toggleCreateGameModal();
+      } catch (error) {
+        console.error("Failed to create game:", error);
+        alert('Failed to create game. Check console for details.');
+      }
+    }
+
+    async function loadGames() {
+      try {
+        if (!web3) {
+          web3 = new Web3('https://base-sepolia.blockpi.network/v1/rpc/public');
         }
-
-        async function loadGames() {
-            try {
-                if (!web3) {
-                    web3 = new Web3('https://base-sepolia.blockpi.network/v1/rpc/public');
-                }
-                if (!gameFactoryContract) {
-                    gameFactoryContract = new web3.eth.Contract(gameFactoryABI, gameFactoryAddress);
-                }
-                const games = await gameFactoryContract.methods.getAllGames().call();
-                console.log(games);
-                displayGames(games);
-            } catch (error) {
-                console.error("Failed to load games:", error);
-            }
+        if (!gameFactoryContract) {
+          gameFactoryContract = new web3.eth.Contract(gameFactoryABI, gameFactoryAddress);
         }
+        const games = await gameFactoryContract.methods.getAllGames().call();
+        console.log(games);
+        displayGames(games);
+      } catch (error) {
+        console.error("Failed to load games:", error);
+      }
+    }
 
-        function displayGames(games) {
-            const gamesElement = document.getElementById('allGames');
-            gamesElement.innerHTML = '';
-            games.forEach(game => {
-                const gameElement = document.createElement('div');
-                gameElement.className = 'bg-black p-4 rounded-lg shadow border border-gray-900 cursor-pointer';
-                gameElement.innerHTML = `
+    function displayGames(games) {
+      const gamesElement = document.getElementById('allGames');
+      gamesElement.innerHTML = '';
+      games.forEach(game => {
+        const gameElement = document.createElement('div');
+        gameElement.className = 'bg-black p-4 rounded-lg shadow border border-gray-900 cursor-pointer';
+        gameElement.innerHTML = `
                     <svg data-jdenticon-value="${game.gameAddress}" width="80" height="80" class="mb-4"></svg>
                     <h3 class="text-xl font-bold mb-2">${game.gameName}</h3>
                     <p class="text-gray-400 mb-2">${game.gameDescription}</p>
                     <p class="text-sm text-gray-500">Address: ${game.gameAddress}</p>
                 `;
-                gameElement.addEventListener('click', () => {
-                    window.location.href = `game.html?gameId=${game.gameAddress}`;
-                });
-                gamesElement.appendChild(gameElement);
-            });
-            jdenticon();
-        }
-
-        function toggleCreateGameModal() {
-            const modal = document.getElementById('createGameModal');
-            modal.classList.toggle('hidden');
-        }
-
-        document.getElementById('connectWallet').addEventListener('click', connectWallet);
-        document.getElementById('createGameBtn').addEventListener('click', toggleCreateGameModal);
-        document.getElementById('createGame').addEventListener('click', createGame);
-        document.getElementById('cancelCreate').addEventListener('click', toggleCreateGameModal);
-
-        window.addEventListener('load', () => {
-            feather.replace();
-            loadGames();
+        gameElement.addEventListener('click', () => {
+          window.location.href = `game.html?gameId=${game.gameAddress}`;
         });
-    </script>
+        gamesElement.appendChild(gameElement);
+      });
+      jdenticon();
+    }
+
+    function toggleCreateGameModal() {
+      const modal = document.getElementById('createGameModal');
+      modal.classList.toggle('hidden');
+    }
+
+    document.getElementById('connectWallet').addEventListener('click', connectWallet);
+    document.getElementById('createGameBtn').addEventListener('click', toggleCreateGameModal);
+    document.getElementById('createGame').addEventListener('click', createGame);
+    document.getElementById('cancelCreate').addEventListener('click', toggleCreateGameModal);
+
+    window.addEventListener('load', () => {
+      feather.replace();
+      loadGames();
+    });
+  </script>
 </body>
+
 </html>
