@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game View</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        .transition-colors {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .border-gray-900 {
+            border: 1px solid #333 !important;
+        }
+    </style>
+</head>
+<body class="bg-black text-white min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-md">
+        <h2 class="text-2xl font-bold mb-4">Game View</h2>
+        <div id="gameView" class="bg-black p-4 rounded-lg shadow border border-gray-900 mb-8">
+            <h3 class="text-xl font-bold mb-2">Game Title</h3>
+            <p class="text-gray-400 mb-2">Game Description</p>
+            <img id="gameImage" src="" alt="Game Preview" class="mb-4 w-full" />
+            <button id="playGameBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors w-full">
+              <i data-feather="plus" class="mr-2"></i>
+              Play Game
+            </button>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4">Leaderboard</h2>
+        <div id="leaderboard" class="bg-black p-4 rounded-lg shadow border border-gray-900">
+            <table class="w-full">
+                <thead>
+                    <tr>
+                        <th class="text-left py-2">Player</th>
+                        <th class="text-left py-2">Score</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody">
+                    <!-- Leaderboard entries will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function loadGameDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const gameId = urlParams.get('gameId');
+
+            // Fetch game details from the server or blockchain
+            // This is a placeholder for the actual fetch logic
+            const gameDetails = {
+                title: "Sample Game",
+                description: "This is a sample game description.",
+                image: "https://example.com/game-image.png"
+            };
+
+            document.getElementById('gameView').querySelector('h3').innerText = gameDetails.title;
+            document.getElementById('gameView').querySelector('p').innerText = gameDetails.description;
+            // if ipfs image use ipfs.io, else use the image
+            if (gameDetails.image.startsWith('ipfs://')) {
+                gameDetails.image = `https://ipfs.io/ipfs/${gameDetails.image.split('ipfs://')[1]}`;
+            }
+            document.getElementById('gameImage').src = gameDetails.image;
+            if (!gameDetails.image) {
+                document.getElementById('gameImage').style.display = 'none';
+            } 
+
+            // Load leaderboard data
+            await loadLeaderboard(gameId);
+        }
+
+        async function loadLeaderboard(gameId) {
+            // Fetch leaderboard data from the server or blockchain
+            // This is a placeholder for the actual fetch logic
+            const leaderboardData = [
+                { player: "Player1", score: 100 },
+                { player: "Player2", score: 90 },
+                { player: "Player3", score: 80 }
+            ];
+
+            const leaderboardBody = document.getElementById('leaderboardBody');
+            leaderboardBody.innerHTML = '';
+            leaderboardData.forEach(entry => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td class="py-2">${entry.player}</td><td class="py-2">${entry.score}</td>`;
+                leaderboardBody.appendChild(row);
+            });
+        }
+
+        window.addEventListener('load', loadGameDetails);
+    </script>
+</body>
+</html>
