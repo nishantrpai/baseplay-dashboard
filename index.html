@@ -24,17 +24,16 @@
 </head>
 
 <body class="bg-black text-white min-h-screen">
-  <div class="container mx-auto px-4 py-8">
+  <div class="container mx-auto px-4 py-8 max-w-xl">
     <header class="flex justify-between items-center mb-8">
-      <h1 class="text-2xl font-bold">Baseplay</h1>
+      <h1 class="text-2xl font-bold"><a href="index.html">Baseplay</a></h1>
       <button id="connectWallet"
         class="bg-gray-900 text-white px-4 py-2 rounded-full flex items-center transition-colors">
         <i data-feather="link" class="mr-2"></i>
         <span>Connect Wallet</span>
       </button>
     </header>
-
-    <div class="flex space-x-4 absolute top-24 right-20">
+    <div class="flex space-x-4 mb-8">
       <button id="createGameBtn"
         class="rounded-full flex items-center text-sm bg-black hover:bg-gray-800 text-white font-bold py-2 px-4 transition-colors">
         <i data-feather="plus" class="mr-2"></i>
@@ -42,15 +41,14 @@
       </button>
 
       <button id="myGamesBtn"
-        class="rounded-full flex items-center text-sm bg-black hover:bg-gray-800 text-white font-bold py-2 px-4 transition-colors"
-        onclick="window.location.href='game.html?gameId=myGameId'">
+        class="rounded-full flex items-center text-sm bg-black hover:bg-gray-800 text-white font-bold py-2 px-4 transition-colors">
         <i data-feather="list" class="mr-2"></i>
         My Games
       </button>
     </div>
 
     <div id="createGameModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full">
-      <div class="relative top-20 mx-auto p-5 w-96 shadow-lg rounded-md bg-black border border-gray-900">
+      <div class="relative top-20 mx-auto p-5 w-96 shadow-lg rounded-md bg-black border border-gray-900 max-w-xl">
         <h3 class="text-sm font-bold mb-4">Create New Game</h3>
         <input type="text" id="gameName" placeholder="Game Name"
           class="w-full p-2 mb-4 bg-black border border-gray-900 rounded text-sm outline-none">
@@ -68,7 +66,7 @@
       </div>
     </div>
 
-    <div id="allGames" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    <div id="allGames" class="grid grid-cols-1 gap-4 max-w-xl"></div>
   </div>
 
   <script>
@@ -122,6 +120,11 @@
                 "internalType": "string",
                 "name": "gameLink",
                 "type": "string"
+              },
+              {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
               }
             ],
             "internalType": "struct GameFactory.GameInfo[]",
@@ -264,18 +267,43 @@
       gamesElement.innerHTML = '';
       games.forEach(game => {
         const gameElement = document.createElement('div');
-        gameElement.className = 'bg-black p-4 rounded-lg shadow border border-gray-900 cursor-pointer';
+        gameElement.className = 'bg-black p-4 rounded-lg shadow border border-gray-900 cursor-pointer max-w-xl';
         gameElement.innerHTML = `
                     <svg data-jdenticon-value="${game.gameAddress}" width="80" height="80" class="mb-4"></svg>
                     <h3 class="text-xl font-bold mb-2">${game.gameName}</h3>
                     <p class="text-gray-400 mb-2">${game.gameDescription}</p>
                     <p class="text-gray-400 mb-2">Link: <a href="${game.gameLink}" class="text-blue-500">${game.gameLink}</a></p>
                     <p class="text-sm text-gray-500">Address: ${game.gameAddress}</p>
+                    <p class="text-sm text-gray-500">Owner: ${game.owner}</p>
                 `;
         gameElement.addEventListener('click', () => {
           window.location.href = `game.html?gameId=${game.gameAddress}`;
         });
         gamesElement.appendChild(gameElement);
+      });
+      jdenticon();
+    }
+
+    function displayMyGames(games) {
+      const gamesElement = document.getElementById('allGames');
+      gamesElement.innerHTML = '';
+      games.forEach(game => {
+        if (game.owner.toLowerCase() === userAddress.toLowerCase()) {
+          const gameElement = document.createElement('div');
+          gameElement.className = 'bg-black p-4 rounded-lg shadow border border-gray-900 cursor-pointer max-w-xl';
+          gameElement.innerHTML = `
+                      <svg data-jdenticon-value="${game.gameAddress}" width="80" height="80" class="mb-4"></svg>
+                      <h3 class="text-xl font-bold mb-2">${game.gameName}</h3>
+                      <p class="text-gray-400 mb-2">${game.gameDescription}</p>
+                      <p class="text-gray-400 mb-2">Link: <a href="${game.gameLink}" class="text-blue-500">${game.gameLink}</a></p>
+                      <p class="text-sm text-gray-500">Address: ${game.gameAddress}</p>
+                      <p class="text-sm text-gray-500">Owner: ${game.owner}</p>
+                  `;
+          gameElement.addEventListener('click', () => {
+            window.location.href = `game.html?gameId=${game.gameAddress}`;
+          });
+          gamesElement.appendChild(gameElement);
+        }
       });
       jdenticon();
     }
@@ -289,6 +317,10 @@
     document.getElementById('createGameBtn').addEventListener('click', toggleCreateGameModal);
     document.getElementById('createGame').addEventListener('click', createGame);
     document.getElementById('cancelCreate').addEventListener('click', toggleCreateGameModal);
+    document.getElementById('myGamesBtn').addEventListener('click', async () => {
+      const games = await gameFactoryContract.methods.getAllGames().call();
+      displayMyGames(games);
+    });
 
     window.addEventListener('load', () => {
       feather.replace();
