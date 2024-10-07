@@ -1,126 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game View</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/feather-icons"></script>
-    <style>
-        .transition-colors {
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        .border-gray-900 {
-            border: 1px solid #333 !important;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game View</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.0.0/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jdenticon@3.1.0/dist/jdenticon.min.js" async
+    integrity="sha384-VngWWnG9GS4jDgsGEUNaoRQtfBGiIKZTiXwm9KpgAeaRn6Y/1tAFiyXqSzqC8Ga/" crossorigin="anonymous">
+    </script>
+  <style>
+    .transition-colors {
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .border-gray-900 {
+      border: 1px solid #333 !important;
+    }
+
+    .wallet-address {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;
+    }
+
+    .highlight {
+      background-color: yellow;
+      color: black;
+    }
+  </style>
 </head>
+
 <body class="bg-black text-white min-h-screen">
-    <div class="container mx-auto px-4 py-8 max-w-md">
-        <h2 class="text-2xl font-bold mb-4">Game View</h2>
-        <div id="gameView" class="bg-black p-4 rounded-lg shadow border border-gray-900 mb-8">
-            <h3 class="text-xl font-bold mb-2">Game Title</h3>
-            <p class="text-gray-400 mb-2">Game Description</p>
-            <img id="gameImage" src="" alt="Game Preview" class="mb-4 w-full" />
-            <button id="playGameBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors w-full">
-              <i data-feather="plus" class="mr-2"></i>
-              Play Game
-            </button>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-4">Leaderboard</h2>
-        <div id="leaderboard" class="bg-black p-4 rounded-lg shadow border border-gray-900 mb-8">
-            <table class="w-full">
-                <thead>
-                    <tr>
-                        <th class="text-left py-2">Player</th>
-                        <th class="text-left py-2">Score</th>
-                    </tr>
-                </thead>
-                <tbody id="leaderboardBody">
-                    <!-- Leaderboard entries will be populated here -->
-                </tbody>
-            </table>
-        </div>
-
-        <h2 class="text-2xl font-bold mb-4">Achievements</h2>
-        <div id="achievements" class="bg-black p-4 rounded-lg shadow border border-gray-900">
-            <!-- Achievements will be populated here -->
-        </div>
+  <div class="container mx-auto px-4 py-8 max-w-md">
+    <h2 class="text-2xl font-bold mb-4">Game View</h2>
+    <div id="gameView" class="bg-black p-4 rounded-lg shadow border border-gray-900 mb-8">
+      <h3 class="text-xl font-bold mb-2" id="gameTitle">Game Title</h3>
+      <p class="text-gray-400 mb-2" id="gameDescription">Game Description</p>
+      <img id="gameImage" src="" alt="Game Preview" class="mb-4 w-full" />
+      <button id="playGameBtn"
+        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors w-full">
+        <i data-feather="plus" class="mr-2"></i>
+        Play Game
+      </button>
     </div>
 
-    <script>
-        async function loadGameDetails() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const gameId = urlParams.get('gameId');
+    <h2 class="text-2xl font-bold mb-4">Leaderboard</h2>
+    <div id="leaderboard" class="bg-black p-4 rounded-lg shadow border border-gray-900 mb-8">
+      <table class="w-full">
+        <thead>
+          <tr>
+            <th class="text-left py-2">Player</th>
+            <th class="text-left py-2">Score</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboardBody">
+          <!-- Leaderboard entries will be populated here -->
+        </tbody>
+      </table>
+    </div>
 
-            // Fetch game details from the server or blockchain
-            // This is a placeholder for the actual fetch logic
-            const gameDetails = {
-                title: "Sample Game",
-                description: "This is a sample game description.",
-                image: "https://example.com/game-image.png"
-            };
+    <h2 class="text-2xl font-bold mb-4">Achievements</h2>
+    <div id="achievements" class="bg-black p-4 rounded-lg shadow border border-gray-900">
+      <!-- Achievements will be populated here -->
+    </div>
+  </div>
 
-            document.getElementById('gameView').querySelector('h3').innerText = gameDetails.title;
-            document.getElementById('gameView').querySelector('p').innerText = gameDetails.description;
-            // if ipfs image use ipfs.io, else use the image
-            if (gameDetails.image.startsWith('ipfs://')) {
-                gameDetails.image = `https://ipfs.io/ipfs/${gameDetails.image.split('ipfs://')[1]}`;
-            }
-            document.getElementById('gameImage').src = gameDetails.image;
-            if (!gameDetails.image) {
-                document.getElementById('gameImage').style.display = 'none';
-            } 
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameAddress = urlParams.get('gameId');
+    const gameABI = [
+      {
+        "inputs": [],
+        "name": "getGameName",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getGameDescription",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getGameLink",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getTopPlayers",
+        "outputs": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "player",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "score",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LeaderboardManager.LeaderboardEntry[10]",
+            "name": "",
+            "type": "tuple[10]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "achievementId",
+            "type": "uint256"
+          }
+        ],
+        "name": "getAchievement",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "imageURI",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getTotalPlayers",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getAllAchievements",
+        "outputs": [
+          {
+            "internalType": "string[]",
+            "name": "names",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string[]",
+            "name": "descriptions",
+            "type": "string[]"
+          },
+          {
+            "internalType": "string[]",
+            "name": "badges",
+            "type": "string[]"
+          },
+          {
+            "internalType": "uint256[]",
+            "name": "playerCounts",
+            "type": "uint256[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ];
 
-            // Load leaderboard data
-            await loadLeaderboard(gameId);
+    let web3;
+    let gameContract;
 
-            // Load achievements data
-            await loadAchievements(gameId);
+    async function loadGameDetails() {
+      if (!web3) {
+        web3 = new Web3('https://base-sepolia.blockpi.network/v1/rpc/public');
+      }
+      gameContract = new web3.eth.Contract(gameABI, gameAddress);
+
+      const gameName = await gameContract.methods.getGameName().call();
+      const gameDescription = await gameContract.methods.getGameDescription().call();
+      const gameLink = await gameContract.methods.getGameLink().call();
+
+      document.getElementById('gameTitle').innerText = gameName;
+      document.getElementById('gameDescription').innerText = gameDescription;
+
+      // Handle IPFS image
+      if (gameLink.startsWith('ipfs://')) {
+        gameLink = `https://ipfs.io/ipfs/${gameLink.split('ipfs://')[1]}`;
+      }
+      document.getElementById('gameImage').src = gameLink || '';
+      if (!gameLink) {
+        document.getElementById('gameImage').style.display = 'none';
+      }
+
+      // Load leaderboard data
+      await loadLeaderboard();
+
+      // Load achievements data
+      await loadAchievements();
+    }
+
+    async function loadLeaderboard() {
+      const leaderboardData = await gameContract.methods.getTopPlayers().call();
+
+      const leaderboardBody = document.getElementById('leaderboardBody');
+      leaderboardBody.innerHTML = '';
+      leaderboardData.forEach(entry => {
+        if (entry.player !== '0x0000000000000000000000000000000000000000') {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td class="py-2 wallet-address">${entry.player}</td><td class="py-2">${entry.score}</td>`;
+          leaderboardBody.appendChild(row);
         }
+      });
+    }
 
-        async function loadLeaderboard(gameId) {
-            // Fetch leaderboard data from the server or blockchain
-            // This is a placeholder for the actual fetch logic
-            const leaderboardData = [
-                { player: "Player1", score: 100 },
-                { player: "Player2", score: 90 },
-                { player: "Player3", score: 80 }
-            ];
+    async function loadAchievements() {
+      const achievementsData = await gameContract.methods.getAllAchievements().call();
+      console.log(achievementsData)
+      const totalPlayers = await gameContract.methods.getTotalPlayers().call();
+      const achievementsContainer = document.getElementById('achievements');
+      achievementsContainer.innerHTML = '';
 
-            const leaderboardBody = document.getElementById('leaderboardBody');
-            leaderboardBody.innerHTML = '';
-            leaderboardData.forEach(entry => {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td class="py-2">${entry.player}</td><td class="py-2">${entry.score}</td>`;
-                leaderboardBody.appendChild(row);
-            });
-        }
+      const { names, descriptions, badges, playerCounts } = achievementsData;
 
-        async function loadAchievements(gameId) {
-            // Fetch achievements data from the server or blockchain
-            // This is a placeholder for the actual fetch logic
-            const achievementsData = [
-                { id: 1, description: "First Win", imageURI: "https://example.com/achievement1.png" },
-                { id: 2, description: "High Score", imageURI: "https://example.com/achievement2.png" },
-                { id: 3, description: "Perfect Game", imageURI: "https://example.com/achievement3.png" }
-            ];
-
-            const achievementsContainer = document.getElementById('achievements');
-            achievementsContainer.innerHTML = '';
-            achievementsData.forEach(achievement => {
-                const achievementElement = document.createElement('div');
-                achievementElement.className = 'flex items-center mb-4';
-                achievementElement.innerHTML = `
-                    <img src="${achievement.imageURI}" alt="${achievement.description}" class="w-8 h-8 mr-4">
-                    <span>${achievement.description}</span>
+      for (let i = 0; i < names.length; i++) {
+        const achievementElement = document.createElement('div');
+        achievementElement.className = 'flex items-center mb-4';
+        achievementElement.innerHTML = `
+                    <img src="${badges[i]}" alt="${descriptions[i]}" class="w-8 h-8 mr-4">
+                    <span>${names[i]}: ${descriptions[i]} (${playerCounts[i]}/${totalPlayers} players)</span>
                 `;
-                achievementsContainer.appendChild(achievementElement);
-            });
-        }
+        achievementsContainer.appendChild(achievementElement);
+      }
+    }
 
-        window.addEventListener('load', loadGameDetails);
-    </script>
+    window.addEventListener('load', loadGameDetails);
+  </script>
 </body>
+
 </html>

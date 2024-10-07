@@ -42,7 +42,7 @@
       </button>
 
       <button id="myGamesBtn"
-        class="rounded-full flex items-center text-sm bg-black  hover:bg-gray-800 text-white font-bold py-2 px-4 transition-colors"
+        class="rounded-full flex items-center text-sm bg-black hover:bg-gray-800 text-white font-bold py-2 px-4 transition-colors"
         onclick="window.location.href='game.html?gameId=myGameId'">
         <i data-feather="list" class="mr-2"></i>
         My Games
@@ -55,6 +55,8 @@
         <input type="text" id="gameName" placeholder="Game Name"
           class="w-full p-2 mb-4 bg-black border border-gray-900 rounded text-sm outline-none">
         <input type="text" id="gameDescription" placeholder="Game Description (140 chars max)"
+          class="w-full p-2 mb-4 bg-black border border-gray-900 rounded text-sm outline-none">
+        <input type="text" id="gameLink" placeholder="Game Link"
           class="w-full p-2 mb-4 bg-black border border-gray-900 rounded text-sm outline-none">
         <div class="flex justify-end">
           <button id="cancelCreate"
@@ -70,7 +72,7 @@
   </div>
 
   <script>
-    const gameFactoryAddress = '0x32af6d0b649f3336f36c5C6177b6a88Bff579dd8';
+    const gameFactoryAddress = '0xe838897BA436D8a7c52ee1bd0387F1c3Db877D4E';
     const gameFactoryABI = [
       {
         "inputs": [
@@ -82,6 +84,11 @@
           {
             "internalType": "string",
             "name": "_gameDescription",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_gameLink",
             "type": "string"
           }
         ],
@@ -109,6 +116,11 @@
               {
                 "internalType": "string",
                 "name": "gameDescription",
+                "type": "string"
+              },
+              {
+                "internalType": "string",
+                "name": "gameLink",
                 "type": "string"
               }
             ],
@@ -157,6 +169,25 @@
         ],
         "stateMutability": "view",
         "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "index",
+            "type": "uint256"
+          }
+        ],
+        "name": "getGameLink",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
       }
     ];
 
@@ -196,12 +227,13 @@
       }
       const gameName = document.getElementById('gameName').value;
       const gameDescription = document.getElementById('gameDescription').value;
+      const gameLink = document.getElementById('gameLink').value;
       if (gameDescription.length > 140) {
         alert('Game description must be 140 characters or less');
         return;
       }
       try {
-        await gameFactoryContract.methods.createGame(gameName, gameDescription).send({ from: userAddress });
+        await gameFactoryContract.methods.createGame(gameName, gameDescription, gameLink).send({ from: userAddress });
         alert('Game created successfully!');
         await loadGames();
         toggleCreateGameModal();
@@ -237,6 +269,7 @@
                     <svg data-jdenticon-value="${game.gameAddress}" width="80" height="80" class="mb-4"></svg>
                     <h3 class="text-xl font-bold mb-2">${game.gameName}</h3>
                     <p class="text-gray-400 mb-2">${game.gameDescription}</p>
+                    <p class="text-gray-400 mb-2">Link: <a href="${game.gameLink}" class="text-blue-500">${game.gameLink}</a></p>
                     <p class="text-sm text-gray-500">Address: ${game.gameAddress}</p>
                 `;
         gameElement.addEventListener('click', () => {
