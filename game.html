@@ -11,7 +11,7 @@
   <script src="https://unpkg.com/feather-icons"></script>
   <script src="https://cdn.jsdelivr.net/npm/jdenticon@3.1.0/dist/jdenticon.min.js" async
     integrity="sha384-VngWWnG9GS4jDgsGEUNaoRQtfBGiIKZTiXwm9KpgAeaRn6Y/1tAFiyXqSzqC8Ga/" crossorigin="anonymous">
-    </script>
+  </script>
   <style>
     .transition-colors {
       transition: background-color 0.3s ease, color 0.3s ease;
@@ -52,8 +52,10 @@
       <!-- <img id="gameImage" src="" alt="Game Preview" class="mb-4 w-full" style="display: none;" /> -->
       <button id="playGameBtn"
         class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors w-full text-sm">
-        <i data-feather="play" class="mr-2"></i>
-        Play Game
+        <span class="flex items-center w-full justify-center">
+          <i data-feather="play" class="mr-2"></i>
+          Play Game
+        </span>
       </button>
     </div>
 
@@ -81,6 +83,7 @@
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const gameAddress = urlParams.get('gameId');
+    console.log(gameAddress)
     const gameABI = [
       {
         "inputs": [],
@@ -215,6 +218,19 @@
         ],
         "stateMutability": "view",
         "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getOwner",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
       }
     ];
 
@@ -222,85 +238,113 @@
     let gameContract;
 
     async function loadGameDetails() {
-      if (!web3) {
-        web3 = new Web3('https://base-sepolia.blockpi.network/v1/rpc/public');
+      try {
+        if (!web3) {
+          const hostname = window.location.hostname;
+          if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]') {
+            web3 = new Web3('http://127.0.0.1:8545'); // Connect to Hardhat node
+          } else {
+            web3 = new Web3('https://base-sepolia.blockpi.network/v1/rpc/public'); // Default to public RPC
+          }
+        }
+        gameContract = new web3.eth.Contract(gameABI, gameAddress);
+        console.log(gameContract)
+        const gameName = await gameContract.methods.getGameName().call();
+        console
+        const gameDescription = await gameContract.methods.getGameDescription().call();
+        let gameLink = await gameContract.methods.getGameLink().call();
+        const gameOwner = await gameContract.methods.getOwner().call();
+
+        document.getElementById('gameTitle').innerText = gameName;
+        document.getElementById('gameDescription').innerText = gameDescription;
+
+        // Handle IPFS image
+        if (gameLink.startsWith('ipfs://')) {
+          gameLink = `https://ipfs.io/ipfs/${gameLink.split('ipfs://')[1]}`;
+        }
+        if (gameLink) {
+          // document.getElementById('gameImage').src = gameLink;
+          // document.getElementById('gameImage').style.display = 'block';
+        } else {
+          // document.getElementById('gameImage').style.display = 'none';
+        }
+
+        // Set playGameBtn link to gameLink
+        document.getElementById('playGameBtn').innerHTML = `<i data-feather="play" class="mr-2"></i> Play Game`;
+        document.getElementById('playGameBtn').onclick = function() {
+          window.location.href = gameLink;
+        };
+        // Display game owner with a link to basescan
+        const ownerElement = document.createElement('p');
+        ownerElement.className = 'text-gray-400 mb-2 text-xs';
+        ownerElement.innerHTML = `<a href="https://basescan.org/address/${gameOwner}" target="_blank" class="text-blue-500">${gameOwner}</a>`;
+        document.getElementById('gameTitle').appendChild(ownerElement);
+
+        // Load leaderboard data
+        await loadLeaderboard();
+
+        // Load achievements data
+        await loadAchievements();
+      } catch (error) {
+        console.error("Failed to load game details:", error);
       }
-      gameContract = new web3.eth.Contract(gameABI, gameAddress);
-
-      const gameName = await gameContract.methods.getGameName().call();
-      const gameDescription = await gameContract.methods.getGameDescription().call();
-      let gameLink = await gameContract.methods.getGameLink().call();
-
-      document.getElementById('gameTitle').innerText = gameName;
-      document.getElementById('gameDescription').innerText = gameDescription;
-
-      // Handle IPFS image
-      if (gameLink.startsWith('ipfs://')) {
-        gameLink = `https://ipfs.io/ipfs/${gameLink.split('ipfs://')[1]}`;
-      }
-      if (gameLink) {
-        // document.getElementById('gameImage').src = gameLink;
-        // document.getElementById('gameImage').style.display = 'block';
-      } else {
-        // document.getElementById('gameImage').style.display = 'none';
-      }
-
-      // Set playGameBtn link to gameLink
-      document.getElementById('playGameBtn').innerHTML = `<i data-feather="play" class="mr-2"></i> Play Game`;
-      document.getElementById('playGameBtn').onclick = function() {
-        window.location.href = gameLink;
-      };
-
-      // Load leaderboard data
-      await loadLeaderboard();
-
-      // Load achievements data
-      await loadAchievements();
     }
 
     async function loadLeaderboard() {
-      const leaderboardData = await gameContract.methods.getTopPlayers().call();
+      try {
+        const leaderboardData = await gameContract.methods.getTopPlayers().call();
 
-      const leaderboardBody = document.getElementById('leaderboardBody');
-      leaderboardBody.innerHTML = '';
-      leaderboardData.forEach(entry => {
-        if (entry.player !== '0x0000000000000000000000000000000000000000') {
-          const row = document.createElement('tr');
-          row.innerHTML = `<td class="py-2 wallet-address">${entry.player}</td><td class="py-2">${entry.score}</td>`;
-          leaderboardBody.appendChild(row);
-        }
-      });
-    }
-
-    async function loadAchievements() {
-      const achievementsData = await gameContract.methods.getAllAchievements().call();
-      console.log(achievementsData)
-      const totalPlayers = await gameContract.methods.getTotalPlayers().call();
-      const achievementsContainer = document.getElementById('achievements');
-      achievementsContainer.innerHTML = '';
-
-      const { names, descriptions, badges, playerCounts } = achievementsData;
-
-      for (let i = 0; i < names.length; i++) {
-        const achievementElement = document.createElement('div');
-        achievementElement.className = 'flex items-center';
-        const progressBarWidth = (playerCounts[i] / totalPlayers) * 100;
-        achievementElement.innerHTML = `
-          <img src="${badges[i]}" alt="${descriptions[i]}" class="w-8 h-8 mr-4">
-          <div class="flex flex-col w-full">
-            <span class="font-bold">${names[i]}</span>
-            <p class="text-sm text-gray-500">${descriptions[i]}</p>
-            <div class="w-full bg-gray-200 h-1 my-2">
-              <div class="bg-blue-500 h-1" style="width: ${progressBarWidth}%;"></div>
-            </div>
-            <span class="text-xs text-gray-500 float-right">${playerCounts[i]}  / ${totalPlayers} players </span>
-          </div>
-        `;
-        achievementsContainer.appendChild(achievementElement);
+        const leaderboardBody = document.getElementById('leaderboardBody');
+        leaderboardBody.innerHTML = '';
+        leaderboardData.forEach(entry => {
+          if (entry.player !== '0x0000000000000000000000000000000000000000') {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td class="py-2 wallet-address">${entry.player}</td><td class="py-2">${entry.score}</td>`;
+            leaderboardBody.appendChild(row);
+          }
+        });
+      } catch (error) {
+        console.error("Failed to load leaderboard:", error);
+        alert('Failed to load leaderboard. Check console for details.');
       }
     }
 
-    window.addEventListener('load', loadGameDetails);
+    async function loadAchievements() {
+      try {
+        const achievementsData = await gameContract.methods.getAllAchievements().call();
+        console.log(achievementsData)
+        const totalPlayers = await gameContract.methods.getTotalPlayers().call();
+        const achievementsContainer = document.getElementById('achievements');
+        achievementsContainer.innerHTML = '';
+
+        const { names, descriptions, badges, playerCounts } = achievementsData;
+
+        for (let i = 0; i < names.length; i++) {
+          const achievementElement = document.createElement('div');
+          achievementElement.className = 'flex items-center';
+          const progressBarWidth = (playerCounts[i] / totalPlayers) * 100;
+          achievementElement.innerHTML = `
+            <img src="${badges[i]}" alt="${descriptions[i]}" class="w-8 h-8 mr-4">
+            <div class="flex flex-col w-full">
+              <span class="font-bold">${names[i]}</span>
+              <p class="text-sm text-gray-500">${descriptions[i]}</p>
+              <div class="w-full bg-gray-200 h-1 my-2">
+                <div class="bg-blue-500 h-1" style="width: ${progressBarWidth}%;"></div>
+              </div>
+              <span class="text-xs text-gray-500 float-right">${playerCounts[i]}  / ${totalPlayers} players </span>
+            </div>
+          `;
+          achievementsContainer.appendChild(achievementElement);
+        }
+      } catch (error) {
+        console.error("Failed to load achievements:", error);
+      }
+    }
+
+    window.addEventListener('load', () => {
+      loadGameDetails();
+      feather.replace({width: '1em', height: '1em'});
+    });
   </script>
 </body>
 

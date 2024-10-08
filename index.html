@@ -5,6 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Baseplay</title>
+  <script>
+    const gameFactoryAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.0.0/dist/ethers.umd.min.js"></script>
   <script src="https://unpkg.com/feather-icons"></script>
@@ -19,6 +22,10 @@
 
     .border-gray-900 {
       border: 1px solid #333 !important;
+    }
+    i {
+      width: 1em !important;
+      height: 1em !important;
     }
   </style>
 </head>
@@ -58,9 +65,9 @@
           class="w-full p-2 mb-4 bg-black border border-gray-900 rounded text-sm outline-none">
         <div class="flex justify-end">
           <button id="cancelCreate"
-            class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2 transition-colors">Cancel</button>
+            class="bg-gray-500 hover:bg-gray-600 text-white font-bold text-sm py-2 px-4 rounded mr-2 transition-colors">Cancel</button>
           <button id="createGame"
-            class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors">Create
+            class="bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm py-2 px-4 rounded transition-colors">Create
             Game</button>
         </div>
       </div>
@@ -70,7 +77,6 @@
   </div>
 
   <script>
-    const gameFactoryAddress = '0xe838897BA436D8a7c52ee1bd0387F1c3Db877D4E';
     const gameFactoryABI = [
       {
         "inputs": [
@@ -191,6 +197,25 @@
         ],
         "stateMutability": "view",
         "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "index",
+            "type": "uint256"
+          }
+        ],
+        "name": "getGameOwner",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
       }
     ];
 
@@ -206,13 +231,13 @@
           const accounts = await web3.eth.getAccounts();
           userAddress = accounts[0];
           const chainId = await web3.eth.getChainId();
-          if (chainId !== 84532) { // Base Sepolia testnet chain ID
-            alert('Please switch to the Base Sepolia testnet');
-            return;
-          }
+          // if (chainId !== 84532) { // Base Sepolia testnet chain ID
+          //   alert('Please switch to the Base Sepolia testnet');
+          //   return;
+          // }
           gameFactoryContract = new web3.eth.Contract(gameFactoryABI, gameFactoryAddress);
           document.getElementById('connectWallet').innerHTML = `<i data-feather="user" class="mr-2"></i><span>${userAddress.slice(0, 6)}...${userAddress.slice(-4)}</span>`;
-          feather.replace();
+          feather.replace({width: '1.5em', height: '1.5em'});
           await loadGames();
         } catch (error) {
           console.error("Failed to connect wallet:", error);
@@ -249,63 +274,80 @@
     async function loadGames() {
       try {
         if (!web3) {
-          web3 = new Web3('https://base-sepolia.blockpi.network/v1/rpc/public');
+          const hostname = window.location.hostname;
+          console.log(hostname);
+          if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]') {
+            web3 = new Web3('http://127.0.0.1:8545'); // Connect to Hardhat node
+          } else {
+            web3 = new Web3('https://base-sepolia.blockpi.network/v1/rpc/public'); // Default to public RPC
+          }
         }
         if (!gameFactoryContract) {
           gameFactoryContract = new web3.eth.Contract(gameFactoryABI, gameFactoryAddress);
         }
+        console.log(gameFactoryContract);
         const games = await gameFactoryContract.methods.getAllGames().call();
         console.log(games);
-        displayGames(games);
+        await displayGames(games);
       } catch (error) {
         console.error("Failed to load games:", error);
       }
     }
 
-    function displayGames(games) {
+    async function displayGames(games) {
       const gamesElement = document.getElementById('allGames');
       gamesElement.innerHTML = '';
-      games.forEach(game => {
+      for (const game of games) {
+        console.log(games.indexOf(game));
         const gameElement = document.createElement('div');
         gameElement.className = 'bg-black p-4 rounded-lg shadow border border-gray-900 cursor-pointer max-w-xl';
         gameElement.innerHTML = `
                     <svg data-jdenticon-value="${game.gameAddress}" width="80" height="80" class="mb-4"></svg>
-                    <h3 class="text-xl font-bold mb-2">${game.gameName}</h3>
-                    <p class="text-gray-400 mb-2">${game.gameDescription}</p>
-                    <p class="text-gray-400 mb-2">Link: <a href="${game.gameLink}" class="text-blue-500">${game.gameLink}</a></p>
-                    <p class="text-sm text-gray-500">Address: ${game.gameAddress}</p>
-                    <p class="text-sm text-gray-500">Owner: ${game.owner}</p>
+                    <h3 class="text-sm font-bold mb-2">${game.gameName}</h3>
+                    <p class="text-gray-400 mb-2 text-xs">${game.gameDescription}</p>
+                    <div class="flex items-center text-xs text-gray-500" style="font-size: 12px;">
+                      <i data-feather="user" class="mr-1 text-xs"></i>
+                      <a href="https://basescan.org/address/${game.owner}" class="text-blue-500" target="_blank" title="${game.owner}">${game.owner.slice(0, 6)}...${game.owner.slice(-4)}</a>
+                    </div>
+                    <div class="flex items-center text-xs text-gray-500 mt-1" style="font-size: 12px;">
+                      <i data-feather="hash" class="mr-1 text-xs"></i>
+                      <a href="https://basescan.org/address/${game.gameAddress}" class="text-blue-500" target="_blank" title="${game.gameAddress}">${game.gameAddress.slice(0, 6)}...${game.gameAddress.slice(-4)}</a>
+                    </div>
                 `;
         gameElement.addEventListener('click', () => {
           window.location.href = `game.html?gameId=${game.gameAddress}`;
         });
         gamesElement.appendChild(gameElement);
-      });
+      }
       jdenticon();
+      feather.replace({width: '1.5em', height: '1.5em'});
     }
 
-    function displayMyGames(games) {
+    async function displayMyGames(games) {
       const gamesElement = document.getElementById('allGames');
       gamesElement.innerHTML = '';
-      games.forEach(game => {
+      for (const game of games) {
         if (game.owner.toLowerCase() === userAddress.toLowerCase()) {
+          const gameContract = new web3.eth.Contract(gameFactoryABI, game.gameAddress);
+          const owner = await gameContract.methods.getGameOwner(games.indexOf(game)).call();
           const gameElement = document.createElement('div');
           gameElement.className = 'bg-black p-4 rounded-lg shadow border border-gray-900 cursor-pointer max-w-xl';
           gameElement.innerHTML = `
                       <svg data-jdenticon-value="${game.gameAddress}" width="80" height="80" class="mb-4"></svg>
-                      <h3 class="text-xl font-bold mb-2">${game.gameName}</h3>
+                      <h3 class="text-sm font-bold mb-2">${game.gameName}</h3>
                       <p class="text-gray-400 mb-2">${game.gameDescription}</p>
                       <p class="text-gray-400 mb-2">Link: <a href="${game.gameLink}" class="text-blue-500">${game.gameLink}</a></p>
-                      <p class="text-sm text-gray-500">Address: ${game.gameAddress}</p>
-                      <p class="text-sm text-gray-500">Owner: ${game.owner}</p>
+                      <p class="text-sm text-gray-500">Address: <a href="https://basescan.org/address/${game.gameAddress}" class="text-blue-500" target="_blank">${game.gameAddress}</a></p>
+                      <p class="text-sm text-gray-500">Owner: ${owner}</p>
                   `;
           gameElement.addEventListener('click', () => {
             window.location.href = `game.html?gameId=${game.gameAddress}`;
           });
           gamesElement.appendChild(gameElement);
         }
-      });
+      }
       jdenticon();
+      feather.replace({width: '1.5em', height: '1.5em'});
     }
 
     function toggleCreateGameModal() {
@@ -319,11 +361,11 @@
     document.getElementById('cancelCreate').addEventListener('click', toggleCreateGameModal);
     document.getElementById('myGamesBtn').addEventListener('click', async () => {
       const games = await gameFactoryContract.methods.getAllGames().call();
-      displayMyGames(games);
+      await displayMyGames(games);
     });
 
     window.addEventListener('load', () => {
-      feather.replace();
+      feather.replace({width: '1.5em', height: '1.5em'});
       loadGames();
     });
   </script>
