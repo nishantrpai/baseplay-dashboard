@@ -13,6 +13,16 @@
     integrity="sha384-VngWWnG9GS4jDgsGEUNaoRQtfBGiIKZTiXwm9KpgAeaRn6Y/1tAFiyXqSzqC8Ga/" crossorigin="anonymous">
   </script>
   <style>
+    input {
+      border: 1px solid #333;
+      border-radius: 5px;
+      padding: 5px;
+      background-color: #000;
+      color: #fff;
+    }
+    label {
+      color: #fff;
+    }
     .transition-colors {
       transition: background-color 0.3s ease, color 0.3s ease;
     }
@@ -31,6 +41,41 @@
     .highlight {
       background-color: yellow;
       color: black;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.75);
+      padding-top: 60px;
+    }
+
+    .modal-content {
+      background-color: #000;
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid #333;
+      border-radius: 10px;
+      width: 40%;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -74,9 +119,47 @@
       </table>
     </div>
 
+    <button id="addAchievementBtn"
+    class="bg-black hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors max-w-max text-sm float-right">
+    <span class="flex items-center justify-center">
+      <i data-feather="plus" class="mr-2"></i>
+      Add Achievement
+    </span>
+  </button>
     <h2 class="text-2xl font-bold mb-4">Achievements</h2>
-    <div id="achievements" class="bg-black p-4 rounded-lg shadow border border-gray-900">
+   
+
+    <div id="achievements" class="bg-black p-4 rounded-lg shadow border border-gray-900 mb-8">
       <!-- Achievements will be populated here -->
+    </div>
+
+
+    <div id="addAchievementModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 class="text-2xl font-bold mb-4">Add Achievement</h2>
+        <form id="addAchievementForm">
+          <div class="mb-4">
+            <label for="achievementName" class="block text-sm font-bold mb-2">Name:</label>
+            <input type="text" id="achievementName" name="achievementName"
+              class="shadow appearance-none border rounded w-full py-2 px-3 bg-black text-whiteleading-tight focus:outline-none focus:shadow-outline">
+          </div>
+          <div class="mb-4">
+            <label for="achievementDescription" class="block  text-sm font-bold mb-2">Description (140 characters max):</label>
+            <input id="achievementDescription" name="achievementDescription"
+              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></input>
+          </div>
+          <div class="mb-4">
+            <label for="achievementBadge" class="block  text-sm font-bold mb-2">Badge URL:</label>
+            <input type="text" id="achievementBadge" name="achievementBadge"
+              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+          </div>
+          <button type="submit"
+            class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors w-full text-sm">
+            Add Achievement
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -341,9 +424,41 @@
       }
     }
 
+    // Modal functionality
+    const modal = document.getElementById("addAchievementModal");
+    const btn = document.getElementById("addAchievementBtn");
+    const span = document.getElementsByClassName("close")[0];
+
+    btn.onclick = function() {
+      modal.style.display = "block";
+    }
+
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
+
+    document.getElementById('addAchievementForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const name = document.getElementById('achievementName').value;
+      const description = document.getElementById('achievementDescription').value;
+      const badge = document.getElementById('achievementBadge').value;
+
+      // Add your logic to handle the new achievement data here
+      console.log('New Achievement:', { name, description, badge });
+
+      // Close the modal
+      modal.style.display = "none";
+    });
+
     window.addEventListener('load', () => {
       loadGameDetails();
-      feather.replace({width: '1em', height: '1em'});
+      feather.replace({ width: '1em', height: '1em' });
     });
   </script>
 </body>
