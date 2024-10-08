@@ -83,8 +83,14 @@
 <body class="bg-black text-white min-h-screen">
   <div class="container mx-auto px-4 py-8 max-w-xl">
     <header class="flex justify-between items-center mb-8">
-      <h1 class="text-2xl font-bold"><a href="index.html">Baseplay</a></h1>
-      <button id="connectWallet"
+      <h1 class="text-2xl font-bold">
+        <a href="index.html">
+          <span class="inline-flex items-center">
+            <i data-feather="play" class="mr-2" style="width: 1em; height: 1em;"></i>
+            Baseplay
+          </span>
+        </a>
+      </h1>      <button id="connectWallet"
         class="bg-gray-900 text-white px-4 py-2 rounded-full flex items-center transition-colors">
         <i data-feather="link" class="mr-2"></i>
         <span>Connect Wallet</span>
@@ -93,7 +99,7 @@
     <h2 class="text-2xl font-bold mb-4">Game View</h2>
     <div id="gameView" class="bg-black p-4 rounded-lg shadow border border-gray-900 mb-8">
       <h3 class="text-xl font-bold mb-2" id="gameTitle">Game Title</h3>
-      <p class="text-gray-400 mb-2" id="gameDescription">Game Description</p>
+      <p class="text-gray-400 text-xs mb-2" id="gameDescription">Game Description</p>
       <!-- <img id="gameImage" src="" alt="Game Preview" class="mb-4 w-full" style="display: none;" /> -->
       <button id="playGameBtn"
         class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors w-full text-sm">
@@ -405,7 +411,7 @@
         leaderboardData.forEach(entry => {
           if (entry.player !== '0x0000000000000000000000000000000000000000') {
             const row = document.createElement('tr');
-            row.innerHTML = `<td class="py-2 wallet-address">${entry.player}</td><td class="py-2">${entry.score}</td>`;
+            row.innerHTML = `<td class="py-2 wallet-address text-xs">${entry.player}</td><td class="py-2 text-xs font-bold">${entry.score}</td>`;
             leaderboardBody.appendChild(row);
           }
         });

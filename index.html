@@ -23,6 +23,7 @@
     .border-gray-900 {
       border: 1px solid #333 !important;
     }
+
     i {
       width: 1em !important;
       height: 1em !important;
@@ -33,7 +34,14 @@
 <body class="bg-black text-white min-h-screen">
   <div class="container mx-auto px-4 py-8 max-w-xl">
     <header class="flex justify-between items-center mb-8">
-      <h1 class="text-2xl font-bold"><a href="index.html">Baseplay</a></h1>
+      <h1 class="text-2xl font-bold">
+        <a href="index.html">
+          <span class="inline-flex items-center">
+            <i data-feather="play" class="mr-2" style="width: 1em; height: 1em;"></i>
+            Baseplay
+          </span>
+        </a>
+      </h1>
       <button id="connectWallet"
         class="bg-gray-900 text-white px-4 py-2 rounded-full flex items-center transition-colors">
         <i data-feather="link" class="mr-2"></i>
@@ -237,7 +245,7 @@
           // }
           gameFactoryContract = new web3.eth.Contract(gameFactoryABI, gameFactoryAddress);
           document.getElementById('connectWallet').innerHTML = `<i data-feather="user" class="mr-2"></i><span>${userAddress.slice(0, 6)}...${userAddress.slice(-4)}</span>`;
-          feather.replace({width: '1.5em', height: '1.5em'});
+          feather.replace({ width: '1.5em', height: '1.5em' });
           await loadGames();
         } catch (error) {
           console.error("Failed to connect wallet:", error);
@@ -320,7 +328,7 @@
         gamesElement.appendChild(gameElement);
       }
       jdenticon();
-      feather.replace({width: '1.5em', height: '1.5em'});
+      feather.replace({ width: '1.5em', height: '1.5em' });
     }
 
     async function displayMyGames(games) {
@@ -347,7 +355,7 @@
         }
       }
       jdenticon();
-      feather.replace({width: '1.5em', height: '1.5em'});
+      feather.replace({ width: '1.5em', height: '1.5em' });
     }
 
     function toggleCreateGameModal() {
@@ -365,7 +373,7 @@
     });
 
     window.addEventListener('load', () => {
-      feather.replace({width: '1.5em', height: '1.5em'});
+      feather.replace({ width: '1.5em', height: '1.5em' });
       loadGames();
     });
   </script>
