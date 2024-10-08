@@ -142,17 +142,17 @@
           <div class="mb-4">
             <label for="achievementName" class="block text-sm font-bold mb-2">Name:</label>
             <input type="text" id="achievementName" name="achievementName"
-              class="shadow appearance-none border rounded w-full py-2 px-3 bg-black text-whiteleading-tight focus:outline-none focus:shadow-outline">
+              class="shadow appearance-none border rounded w-full py-2 px-3  text-whiteleading-tight focus:outline-none focus:shadow-outline">
           </div>
           <div class="mb-4">
             <label for="achievementDescription" class="block  text-sm font-bold mb-2">Description (140 characters max):</label>
             <input id="achievementDescription" name="achievementDescription"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></input>
+              class="shadow appearance-none border rounded w-full py-2 px-3  leading-tight focus:outline-none focus:shadow-outline"></input>
           </div>
           <div class="mb-4">
             <label for="achievementBadge" class="block  text-sm font-bold mb-2">Badge URL:</label>
             <input type="text" id="achievementBadge" name="achievementBadge"
-              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+              class="shadow appearance-none border rounded w-full py-2 px-3  leading-tight focus:outline-none focus:shadow-outline">
           </div>
           <button type="submit"
             class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors w-full text-sm">
@@ -314,6 +314,29 @@
         ],
         "stateMutability": "view",
         "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "imageURI",
+            "type": "string"
+          }
+        ],
+        "name": "addAchievement",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
       }
     ];
 
@@ -404,7 +427,8 @@
 
         for (let i = 0; i < names.length; i++) {
           const achievementElement = document.createElement('div');
-          achievementElement.className = 'flex items-center';
+          achievementElement.style = 'border-bottom: 1px solid #333;';
+          achievementElement.className = 'flex items-center mb-4 pb-4';
           const progressBarWidth = (playerCounts[i] / totalPlayers) * 100;
           achievementElement.innerHTML = `
             <img src="${badges[i]}" alt="${descriptions[i]}" class="w-8 h-8 mr-4">
@@ -443,14 +467,21 @@
       }
     }
 
-    document.getElementById('addAchievementForm').addEventListener('submit', function(event) {
+    document.getElementById('addAchievementForm').addEventListener('submit', async function(event) {
       event.preventDefault();
       const name = document.getElementById('achievementName').value;
       const description = document.getElementById('achievementDescription').value;
       const badge = document.getElementById('achievementBadge').value;
 
-      // Add your logic to handle the new achievement data here
-      console.log('New Achievement:', { name, description, badge });
+      try {
+        const accounts = await web3.eth.getAccounts();
+        await gameContract.methods.addAchievement(name, description, badge).send({ from: accounts[0] });
+        alert('Achievement added successfully!');
+        await loadAchievements(); // Reload achievements to reflect the new addition
+      } catch (error) {
+        console.error("Failed to add achievement:", error);
+        alert('Failed to add achievement. Check console for details.');
+      }
 
       // Close the modal
       modal.style.display = "none";
