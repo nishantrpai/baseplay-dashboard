@@ -260,9 +260,8 @@
       const gamesElement = document.getElementById('allGames');
       gamesElement.innerHTML = '';
       for (const game of games) {
+        console.log(game.owner, userAddress);
         if (game.owner.toLowerCase() === userAddress.toLowerCase()) {
-          const gameContract = new web3.eth.Contract(gameFactoryABI, game.gameAddress);
-          const owner = await gameContract.methods.getGameOwner(games.indexOf(game)).call();
           const gameElement = document.createElement('div');
           gameElement.className = 'bg-black p-4 rounded-lg shadow border border-gray-900 cursor-pointer max-w-xl';
           gameElement.innerHTML = `
@@ -271,7 +270,7 @@
                       <p class="text-gray-400 mb-2">${game.gameDescription}</p>
                       <p class="text-gray-400 mb-2">Link: <a href="${game.gameLink}" class="text-blue-500">${game.gameLink}</a></p>
                       <p class="text-sm text-gray-500">Address: <a href="https://basescan.org/address/${game.gameAddress}" class="text-blue-500" target="_blank">${game.gameAddress}</a></p>
-                      <p class="text-sm text-gray-500">Owner: ${owner}</p>
+                      <p class="text-sm text-gray-500">Owner: ${game.owner}</p>
                   `;
           gameElement.addEventListener('click', () => {
             window.location.href = `game.html?gameId=${game.gameAddress}`;
