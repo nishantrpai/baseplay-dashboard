@@ -92,8 +92,8 @@
         </a>
       </h1>      <button id="connectWallet"
         class="bg-gray-900 text-white px-4 py-2 rounded-full flex items-center transition-colors">
-        <i data-feather="link" class="mr-2"></i>
-        <span>Connect Wallet</span>
+        <i data-feather="link" class="mr-2 text-xs"></i>
+        <span class="text-xs">Connect Wallet</span>
       </button>
     </header>
     <h2 class="text-2xl font-bold mb-4">Game View</h2>
@@ -349,6 +349,21 @@
     let web3;
     let gameContract;
 
+    async function connectWallet() {
+      try {
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        const account = accounts[0];
+        console.log('Connected to wallet:', account);
+        document.getElementById('connectWallet').innerHTML = `<i data-feather="user" class="mr-2 text-xs"></i><span class="text-xs">${account.slice(0, 6)}...${account.slice(-4)}</span>`;
+        feather.replace({ width: '1em', height: '1em' });
+        return account; 
+      } catch (error) {
+        console.error('Failed to connect to wallet:', error);
+        return null;
+      }
+    }
+    
+
     async function loadGameDetails() {
       try {
         if (!web3) {
@@ -458,6 +473,8 @@
     const modal = document.getElementById("addAchievementModal");
     const btn = document.getElementById("addAchievementBtn");
     const span = document.getElementsByClassName("close")[0];
+    const connectWalletBtn = document.getElementById("connectWallet");
+    connectWalletBtn.onclick = connectWallet;
 
     btn.onclick = function() {
       modal.style.display = "block";
@@ -493,9 +510,12 @@
       modal.style.display = "none";
     });
 
-    window.addEventListener('load', () => {
+    window.addEventListener('load', async () => {
       loadGameDetails();
       feather.replace({ width: '1em', height: '1em' });
+      if(window.ethereum) {
+        await connectWallet();
+      }
     });
   </script>
 </body>

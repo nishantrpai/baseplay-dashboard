@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Baseplay</title>
   <script>
-    const gameFactoryAddress = '0x0165878A594ca255338adfa4d48449f69242Eb8F';
+    const gameFactoryAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
   </script>
   <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.0.0/dist/ethers.umd.min.js"></script>
@@ -44,8 +44,8 @@
       </h1>
       <button id="connectWallet"
         class="bg-gray-900 text-white px-4 py-2 rounded-full flex items-center transition-colors">
-        <i data-feather="link" class="mr-2"></i>
-        <span>Connect Wallet</span>
+        <i data-feather="link" class="mr-2 text-xs"></i>
+        <span class="text-xs">Connect Wallet</span>
       </button>
     </header>
     <div class="flex space-x-4 mb-8">
@@ -87,143 +87,56 @@
   <script>
     const gameFactoryABI = [
       {
-        "inputs": [
-          {
-            "internalType": "string",
-            "name": "_gameName",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "_gameDescription",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "_gameLink",
-            "type": "string"
-          }
-        ],
         "name": "createGame",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+        "type": "function",
+        "inputs": [
+          { "name": "_gameName", "type": "string" },
+          { "name": "_gameDescription", "type": "string" },
+          { "name": "_gameLink", "type": "string" }
+        ],
+        "outputs": []
       },
       {
-        "inputs": [],
         "name": "getAllGames",
+        "type": "function",
+        "inputs": [],
         "outputs": [
           {
+            "name": "",
+            "type": "tuple[]",
             "components": [
-              {
-                "internalType": "address",
-                "name": "gameAddress",
-                "type": "address"
-              },
-              {
-                "internalType": "string",
-                "name": "gameName",
-                "type": "string"
-              },
-              {
-                "internalType": "string",
-                "name": "gameDescription",
-                "type": "string"
-              },
-              {
-                "internalType": "string",
-                "name": "gameLink",
-                "type": "string"
-              },
-              {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-              }
-            ],
-            "internalType": "struct GameFactory.GameInfo[]",
-            "name": "",
-            "type": "tuple[]"
+              { "name": "gameAddress", "type": "address" },
+              { "name": "gameName", "type": "string" },
+              { "name": "gameDescription", "type": "string" },
+              { "name": "gameLink", "type": "string" },
+              { "name": "owner", "type": "address" }
+            ]
           }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+        ]
       },
       {
-        "inputs": [
-          {
-            "internalType": "uint256",
-            "name": "index",
-            "type": "uint256"
-          }
-        ],
         "name": "getGameDescription",
-        "outputs": [
-          {
-            "internalType": "string",
-            "name": "",
-            "type": "string"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "inputs": [{ "name": "index", "type": "uint256" }],
+        "outputs": [{ "name": "", "type": "string" }]
       },
       {
-        "inputs": [
-          {
-            "internalType": "uint256",
-            "name": "index",
-            "type": "uint256"
-          }
-        ],
         "name": "getGameName",
-        "outputs": [
-          {
-            "internalType": "string",
-            "name": "",
-            "type": "string"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "inputs": [{ "name": "index", "type": "uint256" }],
+        "outputs": [{ "name": "", "type": "string" }]
       },
       {
-        "inputs": [
-          {
-            "internalType": "uint256",
-            "name": "index",
-            "type": "uint256"
-          }
-        ],
         "name": "getGameLink",
-        "outputs": [
-          {
-            "internalType": "string",
-            "name": "",
-            "type": "string"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "inputs": [{ "name": "index", "type": "uint256" }],
+        "outputs": [{ "name": "", "type": "string" }]
       },
       {
-        "inputs": [
-          {
-            "internalType": "uint256",
-            "name": "index",
-            "type": "uint256"
-          }
-        ],
         "name": "getGameOwner",
-        "outputs": [
-          {
-            "internalType": "address",
-            "name": "",
-            "type": "address"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "inputs": [{ "name": "index", "type": "uint256" }],
+        "outputs": [{ "name": "", "type": "address" }]
       }
     ];
 
@@ -239,12 +152,9 @@
           const accounts = await web3.eth.getAccounts();
           userAddress = accounts[0];
           const chainId = await web3.eth.getChainId();
-          // if (chainId !== 84532) { // Base Sepolia testnet chain ID
-          //   alert('Please switch to the Base Sepolia testnet');
-          //   return;
-          // }
+          console.log("Chain ID:", chainId);
           gameFactoryContract = new web3.eth.Contract(gameFactoryABI, gameFactoryAddress);
-          document.getElementById('connectWallet').innerHTML = `<i data-feather="user" class="mr-2"></i><span>${userAddress.slice(0, 6)}...${userAddress.slice(-4)}</span>`;
+          document.getElementById('connectWallet').innerHTML = `<i data-feather="user" class="mr-2 text-xs"></i><span class="text-xs">${userAddress.slice(0, 6)}...${userAddress.slice(-4)}</span>`;
           feather.replace({ width: '1.5em', height: '1.5em' });
           await loadGames();
         } catch (error) {
@@ -269,13 +179,28 @@
         return;
       }
       try {
-        await gameFactoryContract.methods.createGame(gameName, gameDescription, gameLink).send({ from: userAddress });
+        console.log("Creating game:", gameName, gameDescription, gameLink);
+        const result = await gameFactoryContract.methods.createGame(gameName, gameDescription, gameLink).send({ from: userAddress })
+          .on('transactionHash', function(hash){
+            console.log("Transaction hash:", hash);
+          })
+          .on('confirmation', function(confirmationNumber, receipt){
+            console.log("Confirmation number:", confirmationNumber);
+          })
+          .on('receipt', function(receipt){
+            console.log("Receipt:", receipt);
+          })
+          .on('error', function(error, receipt) {
+            console.error("Error:", error);
+          });
+        console.log("Result:", result);
         alert('Game created successfully!');
-        await loadGames();
         toggleCreateGameModal();
+        const games = await gameFactoryContract.methods.getAllGames().call();
+        console.log("Games after creation:", games);
+        await displayGames(games);
       } catch (error) {
         console.error("Failed to create game:", error);
-        alert('Failed to create game. Check console for details.');
       }
     }
 
@@ -372,9 +297,13 @@
       await displayMyGames(games);
     });
 
-    window.addEventListener('load', () => {
+    window.addEventListener('load', async () => {
       feather.replace({ width: '1.5em', height: '1.5em' });
+      
       loadGames();
+      if (window.ethereum) {
+        await connectWallet();
+      }
     });
   </script>
 </body>
