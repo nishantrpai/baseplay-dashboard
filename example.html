@@ -38,8 +38,6 @@
   if (account) {
     console.log("Connected account:", account);
     // Update UI to show connected state
-    document.getElementById('connectWalletBtn').textContent = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
-    document.getElementById('connectWalletBtn').disabled = true;
   } else {
     console.log("Failed to connect wallet");
   }
@@ -67,6 +65,10 @@
         <strong class="text-blue-300">Note:</strong> The <code class="bg-gray-800 px-1 rounded">unlockAchievement</code>
         function will automatically use the connected wallet address as the player address.
       </div>
+      <div class="bg-blue-900 border-l-4 border-blue-400 p-4 mt-4 rounded-md">
+        <strong class="text-blue-300">Note:</strong> Once an achievement is unlocked, it cannot be unlocked again. True for example below as well.
+      </div>
+
     </section>
 
     <section class="mb-8">
@@ -111,7 +113,7 @@ function onTaskComplete() {
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
-  <script id="baseplay-service" src="service.js?gameId=0xa16E02E87b7454126E5E10d957A927A7F5B5d2be"></script>
+  <script id="baseplay-service" src="service.js?gameId=0x75537828f2ce51be7289709686A69CbFDbB714F1"></script>
   <script>
     feather.replace()
 

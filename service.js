@@ -8,6 +8,7 @@ window.addEventListener('load', async () => {
     let web3;
     const hostname = window.location.hostname;
     if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]') {
+      console.log("Localhost detected");
       web3 = new Web3('http://127.0.0.1:8545'); // Connect to Hardhat node for localhost
     } else if (typeof window.ethereum !== 'undefined') {
       // Use the browser's injected provider for non-localhost domains
@@ -87,10 +88,11 @@ window.addEventListener('load', async () => {
         "stateMutability": "view",
         "type": "function"
       }
-      // Add other function signatures if needed
+      // Ensure no duplicate property names in the object
     ];
 
     // Create a contract instance
+    web3.eth.setProvider(web3.currentProvider);
     const gameContract = new web3.eth.Contract(gameABI, gameAddress);
 
     // Function to unlock an achievement
@@ -101,7 +103,7 @@ window.addEventListener('load', async () => {
           console.error("No wallet connected");
           return;
         }
-        // const tx = await gameContract.methods.unlockAchievement(playerAddress, achievementId).send({ from: playerAddress });
+        const tx = await gameContract.methods.unlockAchievement(playerAddress, achievementId).send({ from: playerAddress });
         console.log(`Achievement ${achievementId} unlocked for player ${playerAddress}`);
         
         // Get achievement details
