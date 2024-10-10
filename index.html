@@ -6,7 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Baseplay</title>
   <script>
-    const gameFactoryAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+    let isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    isLocal = false;
+    const gameFactoryAddress = isLocal ? '0x5FbDB2315678afecb367f032d93F642f64180aa3' : '0x1247B779596CD0863C480034E41A4Dd56dD99402';
+    const rpcUrl = isLocal ? 'http://localhost:8545' : 'https://sepolia.base.org';
   </script>
   <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.0.0/dist/ethers.umd.min.js"></script>
@@ -196,9 +199,7 @@
         console.log("Result:", result);
         alert('Game created successfully!');
         toggleCreateGameModal();
-        const games = await gameFactoryContract.methods.getAllGames().call();
-        console.log("Games after creation:", games);
-        await displayGames(games);
+        await loadGames();
       } catch (error) {
         console.error("Failed to create game:", error);
       }
@@ -207,18 +208,12 @@
     async function loadGames() {
       try {
         if (!web3) {
-          const hostname = window.location.hostname;
-          console.log(hostname);
-          if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]') {
-            web3 = new Web3('http://127.0.0.1:8545'); // Connect to Hardhat node
-          } else {
-            web3 = new Web3('https://base-sepolia.blockpi.network/v1/rpc/public'); // Default to public RPC
-          }
+          web3 = new Web3(rpcUrl);
         }
         if (!gameFactoryContract) {
           gameFactoryContract = new web3.eth.Contract(gameFactoryABI, gameFactoryAddress);
         }
-        console.log(gameFactoryContract);
+        console.log("Game factory contract:", gameFactoryContract);
         const games = await gameFactoryContract.methods.getAllGames().call();
         console.log(games);
         await displayGames(games);
