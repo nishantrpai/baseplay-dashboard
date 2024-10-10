@@ -25,34 +25,38 @@ window.addEventListener('load', async () => {
       return;
     }
 
-    // Function to connect wallet
+    // Function to connect wallet and get current account
     async function connectWallet() {
       try {
-        const accounts = await web3.eth.getAccounts();
-        console.log("Wallet connected:", accounts[0]);
-        return accounts[0];
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const currentAccount = accounts[0];
+        console.log("Wallet connected:", currentAccount);
+        return currentAccount;
       } catch (error) {
         console.error("Failed to connect wallet:", error);
+        return null;
       }
     }
 
-    // Function to get wallet address
+    // Function to get current wallet address
     async function getWalletAddress() {
       try {
-        const accounts = await web3.eth.getAccounts();
-        console.log("Wallet address:", accounts[0]);
-        return accounts[0];
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        const currentAccount = accounts[0];
+        console.log("Current wallet address:", currentAccount);
+        return currentAccount;
       } catch (error) {
         console.error("Failed to get wallet address:", error);
+        return null;
       }
     }
 
     // Maintain session
     async function maintainSession() {
-      const accounts = await web3.eth.getAccounts();
-      if (accounts.length > 0) {
-        console.log("Session maintained for:", accounts[0]);
-        return accounts[0];
+      const currentAccount = await getWalletAddress();
+      if (currentAccount) {
+        console.log("Session maintained for:", currentAccount);
+        return currentAccount;
       } else {
         return await connectWallet();
       }
@@ -90,12 +94,15 @@ window.addEventListener('load', async () => {
     const gameContract = new web3.eth.Contract(gameABI, gameAddress);
 
     // Function to unlock an achievement
-    async function unlockAchievement(playerAddress, achievementId) {
+    async function unlockAchievement(achievementId) {
       try {
-        const signer = await maintainSession();
-        // TODO: commented for testing
-        // const tx = await gameContract.methods.unlockAchievement(playerAddress, achievementId).send({ from: signer });
-        // console.log(`Achievement ${achievementId} unlocked for player ${playerAddress}`);
+        const playerAddress = await getWalletAddress();
+        if (!playerAddress) {
+          console.error("No wallet connected");
+          return;
+        }
+        // const tx = await gameContract.methods.unlockAchievement(playerAddress, achievementId).send({ from: playerAddress });
+        console.log(`Achievement ${achievementId} unlocked for player ${playerAddress}`);
         
         // Get achievement details
         const achievement = await gameContract.methods.getAchievement(achievementId).call();
@@ -127,30 +134,16 @@ window.addEventListener('load', async () => {
       }, 3000);
     }
 
-    // Example usage
-    const connectWalletBtn = document.getElementById('connectWalletBtn');
-    if (connectWalletBtn) {
-      connectWalletBtn.addEventListener('click', async () => {
-        await connectWallet();
-      });
-    }
+    // Expose functions to window.baseplayService
+    window.baseplayService = {
+      connectWallet,
+      getWalletAddress,
+      unlockAchievement,
+      currentAccount: null // Add currentAccount property
+    };
 
-    const unlockAchievementBtn = document.getElementById('unlockAchievementBtn');
-    if (unlockAchievementBtn) {
-      unlockAchievementBtn.addEventListener('click', async () => {
-        const playerAddress = await getWalletAddress(); // Replace with actual player address
-        const achievementId = 0; // Replace with actual achievement ID
-        const gameAddressInput = document.getElementById('gameAddress');
-        const gameAddressValue = gameAddressInput instanceof HTMLInputElement ? gameAddressInput.value : '';
-
-        if (!gameAddressValue) {
-          console.error("Game address not provided.");
-          return;
-        }
-
-        await unlockAchievement(playerAddress, achievementId);
-      });
-    }
+    // Initialize currentAccount
+    window.baseplayService.currentAccount = await getWalletAddress();
   }
 
   // Add some basic styles for the toast
@@ -158,7 +151,7 @@ window.addEventListener('load', async () => {
   style.innerHTML = `
     .toast {
       visibility: hidden;
-      background-color: rgba(255, 255, 255, 0.8);
+      background-color: rgba(255, 255, 255, 0.9);
       color: #000;
       text-align: center;
       border-radius: 2px;
@@ -176,6 +169,7 @@ window.addEventListener('load', async () => {
       border-radius: 50px;
       max-width: 80%;
       width: auto;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
     }
 
     .toast img {

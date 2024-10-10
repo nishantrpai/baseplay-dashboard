@@ -1,70 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Achievement Unlock Test</title>
-  <link href="https://fonts.cdnfonts.com/css/helvetica-neue-9" rel="stylesheet">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #000;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .container {
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    .button {
-      background-color: #007bff;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    .button:hover {
-      background-color: #0056b3;
-    }
-  </style>
+  <title>Baseplay Service Documentation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
 </head>
-<body>
-  <div class="container">
-    <h1>Achievement Unlock Test</h1>
-    <label for="gameAddress">Game Address:</label>
-    <input type="text" id="gameAddress" value="0xYourGameAddress" style="width: 300px; margin-bottom: 20px;">
-    <button class="button" id="connectWalletBtn">Connect Wallet</button>
-    <button class="button" id="unlockAchievementBtn" style="margin-top: 20px;">Unlock Achievement</button>
+
+<body class="bg-gray-900 text-gray-300 font-sans">
+  <div class="container mx-auto px-4 py-8 max-w-3xl">
+    <h1 class="text-4xl font-bold text-blue-400 mb-6">Baseplay Service Documentation</h1>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-semibold text-blue-400 mb-4">Introduction</h2>
+      <p class="mb-4">The Baseplay Service provides a simple way to integrate blockchain-based achievements into your
+        web game. This documentation will guide you through the setup and usage of the service.</p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-semibold text-blue-400 mb-4">Setup</h2>
+      <p class="mb-4">To use the Baseplay Service, include the following script tag in your HTML file:</p>
+      <pre
+        class="bg-gray-800 p-4 rounded-md overflow-x-auto"><code class="text-sm text-gray-300">&lt;script id="baseplay-service" src="service.js?gameId=YOUR_GAME_ADDRESS"&gt;&lt;/script&gt;</code></pre>
+      <p class="mt-4">Replace <code class="bg-gray-800 px-1 rounded">YOUR_GAME_ADDRESS</code> with your actual game
+        contract address.</p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-semibold text-blue-400 mb-4">Available Functions</h2>
+
+      <h3 class="text-xl font-semibold text-blue-300 mt-6 mb-3">1. Connect Wallet</h3>
+      <p class="mb-2">Use this function to connect the user's wallet:</p>
+      <pre class="bg-gray-800 p-4 rounded-md overflow-x-auto"><code class="text-sm text-gray-300">async function connectWallet() {
+  const account = await window.baseplayService.connectWallet();
+  if (account) {
+    console.log("Connected account:", account);
+    // Update UI to show connected state
+    document.getElementById('connectWalletBtn').textContent = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
+    document.getElementById('connectWalletBtn').disabled = true;
+  } else {
+    console.log("Failed to connect wallet");
+  }
+}</code></pre>
+
+      <h3 class="text-xl font-semibold text-blue-300 mt-6 mb-3">2. Get Wallet Address</h3>
+      <p class="mb-2">Retrieve the connected wallet address:</p>
+      <pre class="bg-gray-800 p-4 rounded-md overflow-x-auto"><code class="text-sm text-gray-300">async function getWalletAddress() {
+  const address = await window.baseplayService.getWalletAddress();
+  console.log("Wallet address:", address);
+}</code></pre>
+
+      <h3 class="text-xl font-semibold text-blue-300 mt-6 mb-3">3. Unlock Achievement</h3>
+      <p class="mb-2">Unlock an achievement for a player:</p>
+      <pre class="bg-gray-800 p-4 rounded-md overflow-x-auto"><code class="text-sm text-gray-300">async function unlockAchievement(achievementId) {
+  try {
+    await window.baseplayService.unlockAchievement(achievementId);
+    console.log("Achievement unlocked:", achievementId);
+  } catch (error) {
+    console.error("Failed to unlock achievement:", error);
+  }
+}</code></pre>
+
+      <div class="bg-blue-900 border-l-4 border-blue-400 p-4 mt-4 rounded-md">
+        <strong class="text-blue-300">Note:</strong> The <code class="bg-gray-800 px-1 rounded">unlockAchievement</code>
+        function will automatically use the connected wallet address as the player address.
+      </div>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-semibold text-blue-400 mb-4">Example Usage</h2>
+      <p class="mb-4">Here's a simple example of how to use these functions in your game:</p>
+      <pre class="bg-gray-800 p-4 rounded-md overflow-x-auto"><code class="text-sm text-gray-300">// Connect wallet when the game starts
+document.addEventListener('DOMContentLoaded', async () => {
+  await connectWallet();
+});
+
+// Unlock an achievement when the player completes a task
+function onTaskComplete() {
+  const achievementId = 1; // Replace with your actual achievement ID
+  unlockAchievement(achievementId);
+}</code></pre>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-semibold text-blue-400 mb-4">Styling</h2>
+      <p class="mb-4">The Baseplay Service includes a default toast notification style for achievement unlocks. You can
+        customize this by overriding the <code class="bg-gray-800 px-1 rounded">.toast</code> CSS class in your own
+        stylesheet.</p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-2xl font-semibold text-blue-400 mb-4">Test Contract Example</h2>
+      <p class="mb-4">Here's an example using a test contract:</p>
+      <div class="bg-gray-800 p-4 rounded-md h-max">
+        <button id="connectWalletBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+          <i data-feather="link" class="inline-block mr-2"></i>Connect Wallet
+        </button>
+        <button id="unlockAchievementBtn"
+          class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+          <i data-feather="award" class="inline-block mr-2"></i>Unlock Achievement
+        </button>
+      </div>
+    </section>
   </div>
+
   <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
   <script id="baseplay-service" src="service.js?gameId=0xa16E02E87b7454126E5E10d957A927A7F5B5d2be"></script>
   <script>
-    document.getElementById('connectWalletBtn').addEventListener('click', async () => {
-      await connectWallet();
-    });
+    feather.replace()
+
+    async function connectWallet() {
+      const account = await window.baseplayService.connectWallet();
+      if (account) {
+        console.log("Connected account:", account);
+        document.getElementById('connectWalletBtn').textContent = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
+        document.getElementById('connectWalletBtn').disabled = true;
+      } else {
+        console.log("Failed to connect wallet");
+      }
+    }
+
+    document.getElementById('connectWalletBtn').addEventListener('click', connectWallet);
 
     document.getElementById('unlockAchievementBtn').addEventListener('click', async () => {
-      const playerAddress = await getWalletAddress(); // Replace with actual player address
-      const achievementId = 0; // Replace with actual achievement ID
-      const gameAddress = document.getElementById('gameAddress').value;
+      await window.baseplayService.unlockAchievement(0);
+    });
 
-      if (!gameAddress) {
-        console.error("Game address not provided.");
-        return;
+    // Check if wallet is already connected on page load
+    window.addEventListener('load', async () => {
+      const address = await window.baseplayService.getWalletAddress();
+      if (address) {
+        document.getElementById('connectWalletBtn').textContent = `Connected: ${address.slice(0, 6)}...${address.slice(-4)}`;
+        document.getElementById('connectWalletBtn').disabled = true;
       }
-
-      await unlockAchievement(playerAddress, achievementId);
     });
   </script>
 </body>
+
 </html>
