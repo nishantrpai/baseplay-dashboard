@@ -21,18 +21,6 @@ window.addEventListener('load', async () => {
 
         if (!isLocal) { 
           // Check if the user is on the Sepolia chain (chainId 84352)
-          const chainId = await web3.eth.getChainId();
-          if (chainId !== 84352n) {
-          try {
-            await window.ethereum.request({
-              method: 'wallet_switchEthereumChain',
-              params: [{ chainId: '0x149f0' }] // 0x149f0 is the hexadecimal representation of 84352
-            });
-          } catch (switchError) {
-            console.error("Failed to switch to Sepolia chain:", switchError);
-            return;
-            }
-          }
         }
       } catch (error) {
         console.error("User denied account access or failed to switch chain:", error);
