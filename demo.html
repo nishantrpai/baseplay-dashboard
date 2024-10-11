@@ -256,7 +256,7 @@
                 if (account) {
                     loginButton.textContent = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
                     loginButton.disabled = true;
-                    fetchAchievements();
+                    // fetchAchievements();
                 }
             } catch (error) {
                 console.error('Failed to connect wallet:', error);
