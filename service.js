@@ -22,7 +22,7 @@ window.addEventListener('load', async () => {
         if (!isLocal) { 
           // Check if the user is on the Sepolia chain (chainId 84352)
           const chainId = await web3.eth.getChainId();
-          if (chainId !== 84352) {
+          if (chainId !== 84352n) {
           try {
             await window.ethereum.request({
               method: 'wallet_switchEthereumChain',
