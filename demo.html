@@ -1,0 +1,283 @@
+<!-- Start Generation Here -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            overflow: hidden;
+        }
+        #gameCanvas {
+            background-color: #87CEEB;
+            border: 2px solid #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        #achievements {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .achievement {
+            margin: 10px;
+            padding: 10px;
+            background-color: #444;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        #saveScore, #loginButton, #restartButton {
+            margin: 10px;
+            padding: 15px 30px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        #saveScore:hover, #loginButton:hover, #restartButton:hover {
+            background-color: #e68900;
+        }
+        #loginButton {
+            background-color: #333;
+            position: absolute;
+            top: 80px;
+            right: 20px;
+        }
+        #score, #speed {
+            position: absolute;
+            top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        #score {
+            left: 20px;
+        }
+        #speed {
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <button id="loginButton">Login</button>
+    <canvas id="gameCanvas" width="800" height="200"></canvas>
+    <div id="achievements"></div>
+    <button id="saveScore" style="display: none;">Save Score On Chain</button>
+    <button id="restartButton" style="display: none;">Restart Game</button>
+    <div id="score">Score: 0</div>
+    <div id="speed">Speed: 2</div>
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+    <script id="baseplay-service" src="service.js?gameId=0x326A2498A19f2AfA60EDECbc49BB785fa4cE3297"></script>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const achievementsDiv = document.getElementById('achievements');
+        const saveScoreButton = document.getElementById('saveScore');
+        const loginButton = document.getElementById('loginButton');
+        const restartButton = document.getElementById('restartButton');
+        const scoreDiv = document.getElementById('score');
+        const speedDiv = document.getElementById('speed');
+
+        let dino = { x: 50, y: 150, width: 20, height: 20, dy: 0, gravity: 0.5, jumpHeight: -10 };
+        let isJumping = false;
+        let obstacles = [];
+        let gameSpeed = 2;
+        let score = 0;
+        let enemiesCrossed = 0;
+        let achievements = [];
+        let gameOver = false;
+
+        async function fetchAchievements() {
+            try {
+                achievements = await window.baseplayService.getAchievements();
+                updateAchievementsDisplay();
+            } catch (error) {
+                console.error('Failed to fetch achievements:', error);
+            }
+        }
+
+        async function fetchAllAchievements() {
+            try {
+                return await window.baseplayService.getAllAchievements();
+            } catch (error) {
+                console.error('Failed to fetch all achievements:', error);
+                return [];
+            }
+        }
+
+        function drawDino() {
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+        }
+
+        function updateDino() {
+            if (isJumping) {
+                dino.dy = dino.jumpHeight;
+                isJumping = false;
+            }
+            dino.dy += dino.gravity;
+            dino.y += dino.dy;
+
+            if (dino.y > 150) {
+                dino.y = 150;
+                dino.dy = 0;
+            }
+        }
+
+        function drawObstacles() {
+            ctx.fillStyle = '#f00';
+            obstacles.forEach(obstacle => {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+        }
+
+        function updateObstacles() {
+            if (Math.random() < 0.01) {
+                obstacles.push({ x: canvas.width, y: 150, width: 20, height: 20 });
+            }
+            obstacles.forEach(obstacle => {
+                obstacle.x -= gameSpeed;
+                if (obstacle.x + obstacle.width < 0) {
+                    enemiesCrossed++;
+                    checkAchievements();
+                }
+            });
+            obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
+        }
+
+        function checkCollision() {
+            obstacles.forEach(obstacle => {
+                if (dino.x < obstacle.x + obstacle.width &&
+                    dino.x + dino.width > obstacle.x &&
+                    dino.y < obstacle.y + obstacle.height &&
+                    dino.y + dino.height > obstacle.y) {
+                    endGame();
+                }
+            });
+        }
+
+        function updateScore() {
+            score += 1/100;
+            scoreDiv.textContent = `Score: ${score.toFixed(2)}`;
+            if (score % 100 === 0) {
+                gameSpeed += 0.5;
+                speedDiv.textContent = `Speed: ${gameSpeed.toFixed(1)}`;
+            }
+        }
+
+        async function checkAchievements() {
+            const allAchievements = await fetchAllAchievements();
+            if(score > 1) {
+              window.baseplayService.unlockAchievementLocally(0);
+            }
+            if(score > 10) {
+              window.baseplayService.unlockAchievementLocally(1);
+            }
+            if(score > 100) {
+              window.baseplayService.unlockAchievementLocally(2);
+            }
+        }
+
+        function updateAchievementsDisplay() {
+            achievementsDiv.innerHTML = achievements.map(achievement => 
+                `<div class="achievement">${achievement.name}: ${achievement.unlocked ? 'Unlocked!' : 'Locked'}</div>`
+            ).join('');
+        }
+
+        function gameLoop() {
+            if (gameOver) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawDino();
+            updateDino();
+            drawObstacles();
+            updateObstacles();
+            checkCollision();
+            updateScore();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            gameOver = true;
+            saveScoreButton.style.display = 'block';
+            restartButton.style.display = 'block';
+            checkAchievements();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && dino.y === 150) {
+                isJumping = true;
+            }
+        });
+
+        saveScoreButton.addEventListener('click', async () => {
+            try {
+                await window.baseplayService.unlockAchievementOnChain(score);
+                alert('Score saved on chain!');
+            } catch (error) {
+                console.error('Failed to save score:', error);
+                alert('Failed to save score. Please try again.');
+            }
+        });
+
+        loginButton.addEventListener('click', async () => {
+            try {
+                const account = await window.baseplayService.connectWallet();
+                if (account) {
+                    loginButton.textContent = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
+                    loginButton.disabled = true;
+                    fetchAchievements();
+                }
+            } catch (error) {
+                console.error('Failed to connect wallet:', error);
+                alert('Failed to connect wallet. Please try again.');
+            }
+        });
+
+        restartButton.addEventListener('click', () => {
+            gameOver = false;
+            score = 0;
+            gameSpeed = 2;
+            obstacles = [];
+            dino.y = 150;
+            dino.dy = 0;
+            saveScoreButton.style.display = 'none';
+            restartButton.style.display = 'none';
+            scoreDiv.textContent = `Score: ${score}`;
+            speedDiv.textContent = `Speed: ${gameSpeed.toFixed(1)}`;
+            gameLoop();
+        });
+
+        async function initGame() {
+            const address = await window.baseplayService.getWalletAddress();
+            if (address) {
+                loginButton.textContent = `Connected: ${address.slice(0, 6)}...${address.slice(-4)}`;
+                loginButton.disabled = true;
+                await fetchAchievements();
+            }
+            updateAchievementsDisplay();
+            gameLoop();
+        }
+
+        window.addEventListener('load', () => {
+            setTimeout(initGame, 100);
+        });
+    </script>
+</body>
+</html>
+<!-- End Generation Here -->
+<!-- End Generation Here -->

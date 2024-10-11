@@ -8,7 +8,7 @@
   <script>
     let isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     isLocal = false;
-    const gameFactoryAddress = isLocal ? '0x5FbDB2315678afecb367f032d93F642f64180aa3' : '0x1247B779596CD0863C480034E41A4Dd56dD99402';
+    const gameFactoryAddress = isLocal ? '0x5FbDB2315678afecb367f032d93F642f64180aa3' : '0xccBDDaf9aDCEe8b2005557dd6352A0AC55B963A5';
     const rpcUrl = isLocal ? 'http://localhost:8545' : 'https://sepolia.base.org';
   </script>
   <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
@@ -76,9 +76,9 @@
           class="w-full p-2 mb-4 bg-black border border-gray-900 rounded text-sm outline-none">
         <div class="flex justify-end">
           <button id="cancelCreate"
-            class="bg-gray-500 hover:bg-gray-600 text-white font-bold text-sm py-2 px-4 rounded mr-2 transition-colors">Cancel</button>
+            class="bg-black hover:bg-gray-600 text-white font-bold text-sm py-2 px-2 rounded mr-2 transition-colors">Cancel</button>
           <button id="createGame"
-            class="bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm py-2 px-4 rounded transition-colors">Create
+            class="bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm py-2 px-2 rounded transition-colors">Create
             Game</button>
         </div>
       </div>

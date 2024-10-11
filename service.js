@@ -1,6 +1,6 @@
 window.addEventListener('load', async () => {
   const gameAddressElement = document.getElementById('baseplay-service');
-  const gameAddress = gameAddressElement?.getAttribute('src')?.replace('service.js?gameId=', '') || '';
+  const gameAddress = new URL(gameAddressElement?.src).searchParams.get('gameId') || '';
   console.log(gameAddress);
   if (!gameAddress) {
     console.error("Game address not provided in query parameters.");
@@ -171,13 +171,20 @@ window.addEventListener('load', async () => {
           return;
         }
 
+        // Check if the achievement is already unlocked on chain
+        const onChainAchievements = await gameContract.methods.getMyAchievements(playerAddress).call();
+        if (onChainAchievements.includes(achievementId.toString())) {
+          console.log(`Achievement ${achievementId} is already unlocked on chain for ${playerAddress}`);
+          return;
+        }
+
         // Call the unlockAchievement function and send a transaction
         const tx = await gameContract.methods.unlockAchievement(playerAddress, achievementId).send({ from: playerAddress });
         console.log("Transaction hash:", tx);
 
         // Get achievement details
         const achievement = await gameContract.methods.getAchievement(achievementId).call();
-        showToast(`Achievement Unlocked on Chain: ${achievement.name}`, achievement.imageURI);
+        showToast(`Achievement Unlocked on Chain: ${achievement.name}`, achievement.imageURI, achievement.description);
 
         console.log(`Achievement ${achievementId} unlocked for ${playerAddress}`);
       } catch (error) {
@@ -194,17 +201,25 @@ window.addEventListener('load', async () => {
           return;
         }
 
-        // Save achievement locally
+        // Get locally stored achievements
         let achievements = JSON.parse(localStorage.getItem('achievements')) || {};
         if (!achievements[playerAddress]) {
           achievements[playerAddress] = [];
         }
+
+        // Check if the achievement is already unlocked locally
+        if (achievements[playerAddress].includes(achievementId)) {
+          console.log(`Achievement ${achievementId} is already unlocked locally for ${playerAddress}`);
+          return;
+        }
+
+        // Save achievement locally
         achievements[playerAddress].push(achievementId);
         localStorage.setItem('achievements', JSON.stringify(achievements));
 
         // Get achievement details
         const achievement = await gameContract.methods.getAchievement(achievementId).call();
-        showToast(`Achievement Unlocked Locally: ${achievement.name}`, achievement.imageURI);
+        showToast(`Achievement Unlocked: ${achievement.name}`, achievement.imageURI, achievement.description);
 
         console.log(`Achievement ${achievementId} unlocked for ${playerAddress}`);
       } catch (error) {
@@ -212,13 +227,71 @@ window.addEventListener('load', async () => {
       }
     }
 
+    // Function to get achievements
+    async function getAchievements() {
+      try {
+        const playerAddress = await maintainSession();
+        if (!playerAddress) {
+          console.error("No wallet connected");
+          return [];
+        }
+
+        // Get achievements from the blockchain
+        const onChainAchievements = await gameContract.methods.getMyAchievements(playerAddress).call();
+
+        // Get locally stored achievements
+        const localAchievements = JSON.parse(localStorage.getItem('achievements')) || {};
+        const playerLocalAchievements = localAchievements[playerAddress] || [];
+
+        // Combine and deduplicate achievements
+        const allAchievements = [...new Set([...onChainAchievements, ...playerLocalAchievements])];
+
+        // Fetch details for each achievement
+        const achievementDetails = await Promise.all(
+          allAchievements.map(async (id) => {
+            const details = await gameContract.methods.getAchievement(id).call();
+            return { id, ...details };
+          })
+        );
+
+        return achievementDetails;
+      } catch (error) {
+        console.error("Failed to get achievements:", error);
+        return [];
+      }
+    }
+
+    // Function to get all achievements
+    async function getAllAchievements() {
+      try {
+        // Get all achievements from the blockchain
+        const allAchievements = await gameContract.methods.getAllAchievements().call();
+
+        // Map the achievements to a more readable format
+        const achievements = allAchievements.names.map((name, index) => ({
+          name,
+          description: allAchievements.descriptions[index],
+          badge: allAchievements.badges[index],
+          playerCount: allAchievements.playerCounts[index]
+        }));
+
+        return achievements;
+      } catch (error) {
+        console.error("Failed to get all achievements:", error);
+        return [];
+      }
+    }
+
     // Function to show a beautiful toast notification with image
-    function showToast(message, imageUrl) {
+    function showToast(message, imageUrl, description = '') {
       const toast = document.createElement('div');
       toast.className = 'toast';
       toast.innerHTML = `
         <img src="${imageUrl}" alt="Achievement Badge" style="width: 50px; height: 50px; margin-right: 10px;">
-        <span>${message}</span>
+        <div>
+          <span>${message}</span><br>
+          <span style="font-size: 12px; color: #666;">${description}</span>
+        </div>
       `;
       document.body.appendChild(toast);
 
@@ -235,13 +308,16 @@ window.addEventListener('load', async () => {
     }
 
     // Expose functions to window.baseplayService
-    window.baseplayService = {
-      connectWallet,
-      getWalletAddress,
-      unlockAchievementOnChain,
-      unlockAchievementLocally,
-      currentAccount: null // Add currentAccount property
-    };
+    if (!window.baseplayService) {
+      window.baseplayService = {};
+    }
+    window.baseplayService.connectWallet = connectWallet;
+    window.baseplayService.getWalletAddress = getWalletAddress;
+    window.baseplayService.unlockAchievementOnChain = unlockAchievementOnChain;
+    window.baseplayService.unlockAchievementLocally = unlockAchievementLocally;
+    window.baseplayService.getAchievements = getAchievements;
+    window.baseplayService.getAllAchievements = getAllAchievements;
+    window.baseplayService.currentAccount = null; // Add currentAccount property
 
     // Initialize currentAccount with the current active account
     window.baseplayService.currentAccount = await getWalletAddress();
@@ -254,7 +330,7 @@ window.addEventListener('load', async () => {
       visibility: hidden;
       background-color: rgba(255, 255, 255, 0.9);
       color: #000;
-      text-align: center;
+      text-align: left;
       border-radius: 2px;
       padding: 10px;
       position: fixed;
