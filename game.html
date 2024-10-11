@@ -106,13 +106,22 @@
     <div id="gameView" class="bg-black p-4 rounded-lg shadow border border-gray-900 mb-8">
       <h3 class="text-xl font-bold mb-2" id="gameTitle">Game Title</h3>
       <p class="text-gray-400 text-xs mb-2" id="gameDescription">Game Description</p>
-      <button id="playGameBtn"
-        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors w-full text-sm">
-        <span class="flex items-center w-full justify-center">
-          <i data-feather="play" class="mr-2"></i>
-          Play Game
-        </span>
-      </button>
+      <div class="flex justify-between">
+        <button id="playGameBtn"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors text-sm flex-grow mr-2">
+          <span class="flex items-center w-full justify-center">
+            <i data-feather="play" class="mr-2"></i>
+            Play Game
+          </span>
+        </button>
+        <button id="documentationBtn"
+          class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition-colors text-sm">
+          <span class="flex items-center w-full justify-center">
+            <i data-feather="book" class="mr-2"></i>
+            Docs
+          </span>
+        </button>
+      </div>
     </div>
 
     <h2 class="text-2xl font-bold mb-4">Leaderboard</h2>
@@ -292,27 +301,49 @@
 
     let web3;
     let gameContract;
+    let userAddress;
 
-    async function connectWallet() {
-      try {
-        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-        const account = accounts[0];
-        console.log('Connected to wallet:', account);
-        document.getElementById('connectWallet').innerHTML = `<i data-feather="user" class="mr-2 text-xs"></i><span class="text-xs">${account.slice(0, 6)}...${account.slice(-4)}</span>`;
-        feather.replace({ width: '1em', height: '1em' });
-        return account; 
-      } catch (error) {
-        console.error('Failed to connect to wallet:', error);
-        return null;
+    async function initWeb3() {
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          // Request account access
+          await window.ethereum.request({ method: 'eth_requestAccounts' });
+          web3 = new Web3(window.ethereum);
+          console.log("Web3 instance is", web3);
+          return true;
+        } catch (error) {
+          console.error("User denied account access");
+          return false;
+        }
+      } else {
+        console.log('Non-Ethereum browser detected. You should consider trying MetaMask!');
+        return false;
       }
     }
-    
+
+    async function connectWallet() {
+      if (await initWeb3()) {
+        try {
+          const accounts = await web3.eth.getAccounts();
+          userAddress = accounts[0];
+          console.log('Connected to wallet:', userAddress);
+          document.getElementById('connectWallet').innerHTML = `<i data-feather="user" class="mr-2 text-xs"></i><span class="text-xs">${userAddress.slice(0, 6)}...${userAddress.slice(-4)}</span>`;
+          feather.replace({ width: '1em', height: '1em' });
+          return userAddress;
+        } catch (error) {
+          console.error('Failed to connect to wallet:', error);
+          return null;
+        }
+      }
+    }
 
     async function loadGameDetails() {
       try {
-        console.log("Loading game details for game address:", gameAddress, isLocal);
+        console.log("Loading game details for game address:", gameAddress);
         if (!web3) {
-          web3 = new Web3(rpcUrl);
+          if (!await initWeb3()) {
+            throw new Error("Failed to initialize Web3");
+          }
         }
         if (!gameContract) {
           gameContract = new web3.eth.Contract(gameABI, gameAddress);
@@ -340,6 +371,11 @@
         ownerElement.className = 'text-gray-400 mb-2 text-xs';
         ownerElement.innerHTML = `<a href="https://basescan.org/address/${gameDetails[0]}" target="_blank" class="text-blue-500">${gameDetails[0]}</a>`;
         document.getElementById('gameTitle').appendChild(ownerElement);
+
+        // Set documentationBtn link
+        document.getElementById('documentationBtn').onclick = function() {
+          window.open(`example.html?gameId=${gameAddress}`, '_blank');
+        };
 
         // Load leaderboard data
         await loadLeaderboard();
@@ -437,9 +473,35 @@
       const badge = document.getElementById('achievementBadge').value;
 
       try {
-        const accounts = await web3.eth.getAccounts();
-        await gameContract.methods.addAchievement(name, description, badge).send({ from: accounts[0] });
-        alert('Achievement added successfully!');
+        if (!userAddress) {
+          await connectWallet();
+          if (!userAddress) {
+            throw new Error("No user address found. Please make sure your wallet is connected.");
+          }
+        }
+        console.log("Adding achievement:", name, description, badge, userAddress);
+        
+        // Show a loading message
+        alert("Please confirm the transaction in MetaMask.");
+
+        const result = await gameContract.methods.addAchievement(name, description, badge).send({ from: userAddress })
+          .on('transactionHash', function(hash){
+            console.log("Transaction hash:", hash);
+            alert(`Transaction submitted. Hash: ${hash}`);
+          })
+          .on('confirmation', function(confirmationNumber, receipt){
+            console.log("Confirmation number:", confirmationNumber);
+          })
+          .on('receipt', function(receipt){
+            console.log("Receipt:", receipt);
+            alert("Achievement added successfully!");
+          })
+          .on('error', function(error, receipt) {
+            console.error("Error:", error);
+            alert('Failed to add achievement. Check console for details.');
+          });
+        
+        console.log("Result:", result);
         await loadAchievements(); // Reload achievements to reflect the new addition
       } catch (error) {
         console.error("Failed to add achievement:", error);
@@ -451,7 +513,8 @@
     });
 
     window.addEventListener('load', async () => {
-      loadGameDetails();
+      await initWeb3();
+      await loadGameDetails();
       feather.replace({ width: '1em', height: '1em' });
       if(window.ethereum) {
         await connectWallet();

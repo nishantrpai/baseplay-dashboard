@@ -7,8 +7,9 @@ window.addEventListener('load', async () => {
   } else {
     let web3;
     const hostname = window.location.hostname;
-    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]') {
-      console.log("Localhost detected");
+    let isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+    isLocal = false; // for local testing set true
+    if (isLocal) {
       web3 = new Web3('http://127.0.0.1:8545'); // Connect to Hardhat node for localhost
     } else if (typeof window.ethereum !== 'undefined') {
       // Use the browser's injected provider for non-localhost domains
@@ -26,12 +27,16 @@ window.addEventListener('load', async () => {
       return;
     }
 
-    // Function to connect wallet and get current account
+    // Function to connect wallet and get current active account
     async function connectWallet() {
       try {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         const currentAccount = accounts[0];
         console.log("Wallet connected:", currentAccount);
+        window.ethereum.on('accountsChanged', function(accounts) {
+          console.log("Accounts changed:", accounts);
+          window.baseplayService.currentAccount = accounts[0];
+        });
         return currentAccount;
       } catch (error) {
         console.error("Failed to connect wallet:", error);
@@ -39,12 +44,11 @@ window.addEventListener('load', async () => {
       }
     }
 
-    // Function to get current wallet address
+    // Function to get current active wallet address
     async function getWalletAddress() {
       try {
         const accounts = await window.ethereum.request({ method: 'eth_accounts' });
         const currentAccount = accounts[0];
-        console.log("Current wallet address:", currentAccount);
         return currentAccount;
       } catch (error) {
         console.error("Failed to get wallet address:", error);
@@ -63,7 +67,7 @@ window.addEventListener('load', async () => {
       }
     }
 
-    // ABI of the Game contract
+    // Updated ABI of the Game contract
     const gameABI = [
       {
         "name": "unlockAchievement",
@@ -87,30 +91,124 @@ window.addEventListener('load', async () => {
         ],
         "stateMutability": "view",
         "type": "function"
+      },
+      {
+        "name": "updateScore",
+        "type": "function",
+        "inputs": [
+          { "name": "score", "type": "uint256" }
+        ],
+        "outputs": []
+      },
+      {
+        "name": "getTopPlayers",
+        "type": "function",
+        "inputs": [],
+        "outputs": [
+          {
+            "components": [
+              { "name": "player", "type": "address" },
+              { "name": "score", "type": "uint256" }
+            ],
+            "name": "",
+            "type": "tuple[10]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "name": "getAllAchievements",
+        "type": "function",
+        "inputs": [],
+        "outputs": [
+          { "name": "names", "type": "string[]" },
+          { "name": "descriptions", "type": "string[]" },
+          { "name": "badges", "type": "string[]" },
+          { "name": "playerCounts", "type": "uint256[]" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "name": "getMyAchievements",
+        "type": "function",
+        "inputs": [
+          { "name": "player", "type": "address" }
+        ],
+        "outputs": [
+          { "name": "", "type": "uint256[]" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "name": "getGameDetails",
+        "type": "function",
+        "inputs": [],
+        "outputs": [
+          { "name": "", "type": "address" },
+          { "name": "", "type": "string" },
+          { "name": "", "type": "string" },
+          { "name": "", "type": "string" },
+          { "name": "", "type": "uint256" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
       }
-      // Ensure no duplicate property names in the object
     ];
 
     // Create a contract instance
     web3.eth.setProvider(web3.currentProvider);
     const gameContract = new web3.eth.Contract(gameABI, gameAddress);
 
-    // Function to unlock an achievement
-    async function unlockAchievement(achievementId) {
+    // Function to unlock an achievement and save on chain
+    async function unlockAchievementOnChain(achievementId) {
       try {
-        const playerAddress = await getWalletAddress();
+        const playerAddress = await maintainSession();
         if (!playerAddress) {
           console.error("No wallet connected");
           return;
         }
+
+        // Call the unlockAchievement function and send a transaction
         const tx = await gameContract.methods.unlockAchievement(playerAddress, achievementId).send({ from: playerAddress });
-        console.log(`Achievement ${achievementId} unlocked for player ${playerAddress}`);
-        
+        console.log("Transaction hash:", tx);
+
         // Get achievement details
         const achievement = await gameContract.methods.getAchievement(achievementId).call();
-        showToast(`Achievement Unlocked: ${achievement.name}`, achievement.imageURI);
+        showToast(`Achievement Unlocked on Chain: ${achievement.name}`, achievement.imageURI);
+
+        console.log(`Achievement ${achievementId} unlocked for ${playerAddress}`);
       } catch (error) {
-        console.error("Failed to unlock achievement:", error);
+        console.error("Failed to unlock achievement on chain:", error);
+      }
+    }
+
+    // Function to unlock an achievement and save locally
+    async function unlockAchievementLocally(achievementId) {
+      try {
+        const playerAddress = await maintainSession();
+        if (!playerAddress) {
+          console.error("No wallet connected");
+          return;
+        }
+
+        // Save achievement locally
+        let achievements = JSON.parse(localStorage.getItem('achievements')) || {};
+        if (!achievements[playerAddress]) {
+          achievements[playerAddress] = [];
+        }
+        achievements[playerAddress].push(achievementId);
+        localStorage.setItem('achievements', JSON.stringify(achievements));
+
+        // Get achievement details
+        const achievement = await gameContract.methods.getAchievement(achievementId).call();
+        showToast(`Achievement Unlocked Locally: ${achievement.name}`, achievement.imageURI);
+
+        console.log(`Achievement ${achievementId} unlocked for ${playerAddress}`);
+      } catch (error) {
+        console.error("Failed to unlock achievement locally:", error);
       }
     }
 
@@ -140,11 +238,12 @@ window.addEventListener('load', async () => {
     window.baseplayService = {
       connectWallet,
       getWalletAddress,
-      unlockAchievement,
+      unlockAchievementOnChain,
+      unlockAchievementLocally,
       currentAccount: null // Add currentAccount property
     };
 
-    // Initialize currentAccount
+    // Initialize currentAccount with the current active account
     window.baseplayService.currentAccount = await getWalletAddress();
   }
 
