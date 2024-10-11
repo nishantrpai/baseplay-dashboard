@@ -182,6 +182,12 @@ window.addEventListener('load', async () => {
         const tx = await gameContract.methods.unlockAchievement(playerAddress, achievementId).send({ from: playerAddress });
         console.log("Transaction hash:", tx);
 
+        // Save achievement locally
+        let achievements = JSON.parse(localStorage.getItem('achievements')) || {};
+        achievements[playerAddress] = [...(achievements[playerAddress] || []), achievementId];
+        achievements[playerAddress].push({ id: achievementId, savedOnChain: true });
+        localStorage.setItem('achievements', JSON.stringify(achievements));
+
         // Get achievement details
         const achievement = await gameContract.methods.getAchievement(achievementId).call();
         showToast(`Achievement Unlocked on Chain: ${achievement.name}`, achievement.imageURI, achievement.description);
@@ -208,13 +214,13 @@ window.addEventListener('load', async () => {
         }
 
         // Check if the achievement is already unlocked locally
-        if (achievements[playerAddress].includes(achievementId)) {
+        if (achievements[playerAddress].some(ach => ach.id === achievementId)) {
           console.log(`Achievement ${achievementId} is already unlocked locally for ${playerAddress}`);
           return;
         }
 
         // Save achievement locally
-        achievements[playerAddress].push(achievementId);
+        achievements[playerAddress].push({ id: achievementId, savedOnChain: false });
         localStorage.setItem('achievements', JSON.stringify(achievements));
 
         // Get achievement details
@@ -244,7 +250,7 @@ window.addEventListener('load', async () => {
         const playerLocalAchievements = localAchievements[playerAddress] || [];
 
         // Combine and deduplicate achievements
-        const allAchievements = [...new Set([...onChainAchievements, ...playerLocalAchievements])];
+        const allAchievements = [...new Set([...onChainAchievements, ...playerLocalAchievements.map(ach => ach.id)])];
 
         // Fetch details for each achievement
         const achievementDetails = await Promise.all(

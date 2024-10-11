@@ -38,7 +38,7 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             text-align: center;
         }
-        #saveScore, #loginButton, #restartButton {
+        #saveScore, #loginButton, #restartButton, #save1stAchievement, #save2ndAchievement, #save3rdAchievement {
             margin: 10px;
             padding: 15px 30px;
             background-color: #ff9800;
@@ -79,6 +79,9 @@
     <div id="achievements"></div>
     <button id="saveScore" style="display: none;">Save Score On Chain</button>
     <button id="restartButton" style="display: none;">Restart Game</button>
+    <button id="save1stAchievement" style="display: none;">Save 1st Achievement on chain</button>
+    <button id="save2ndAchievement" style="display: none;">Save 2nd Achievement on chain</button>
+    <button id="save3rdAchievement" style="display: none;">Save 3rd Achievement on chain</button>
     <div id="score">Score: 0</div>
     <div id="speed">Speed: 2</div>
     <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
@@ -184,19 +187,31 @@
             const allAchievements = await fetchAllAchievements();
             if(score > 1) {
               window.baseplayService.unlockAchievementLocally(0);
+              document.getElementById('save1stAchievement').style.display = 'block';
+              document.getElementById('save1stAchievement').onclick = async () => {
+                await window.baseplayService.unlockAchievementOnChain(0);
+              }
             }
             if(score > 10) {
               window.baseplayService.unlockAchievementLocally(1);
+              document.getElementById('save2ndAchievement').style.display = 'block';
+              document.getElementById('save2ndAchievement').onclick = async () => {
+                await window.baseplayService.unlockAchievementOnChain(1);
+              }
             }
             if(score > 100) {
               window.baseplayService.unlockAchievementLocally(2);
+              document.getElementById('save3rdAchievement').style.display = 'block';
+              document.getElementById('save3rdAchievement').onclick = async () => {
+                await window.baseplayService.unlockAchievementOnChain(2);
+              }
             }
         }
 
         function updateAchievementsDisplay() {
-            achievementsDiv.innerHTML = achievements.map(achievement => 
-                `<div class="achievement">${achievement.name}: ${achievement.unlocked ? 'Unlocked!' : 'Locked'}</div>`
-            ).join('');
+            // achievementsDiv.innerHTML = achievements.map(achievement => 
+            //     `<div class="achievement">${achievement.name}: ${achievement.unlocked ? 'Unlocked!' : 'Locked'}</div>`
+            // ).join('');
         }
 
         function gameLoop() {
