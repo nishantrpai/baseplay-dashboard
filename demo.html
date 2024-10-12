@@ -108,6 +108,7 @@
         let enemiesCrossed = 0;
         let achievements = [];
         let gameOver = false;
+        let scoreOnChain = false;
 
         async function fetchAllAchievements() {
             try {
@@ -221,7 +222,9 @@
 
         function endGame() {
             gameOver = true;
-            saveScoreButton.style.display = 'block';
+            if (!scoreOnChain) {
+                saveScoreButton.style.display = 'block';
+            }
             restartButton.style.display = 'block';
             showLeaderboardButton.style.display = 'block';
             document.getElementById('save1stAchievement').style.display = 'block';
@@ -240,6 +243,8 @@
             try {
                 await window.baseplayService.updateScore(Math.floor(score));
                 alert('Score saved on chain!');
+                scoreOnChain = true;
+                saveScoreButton.style.display = 'none';
             } catch (error) {
                 console.error('Failed to save score:', error);
                 alert('Failed to save score. Please try again.');
@@ -266,6 +271,7 @@
             obstacles = [];
             dino.y = 150;
             dino.dy = 0;
+            scoreOnChain = false;
             saveScoreButton.style.display = 'none';
             restartButton.style.display = 'none';
             showLeaderboardButton.style.display = 'none';

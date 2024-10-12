@@ -11,6 +11,7 @@
 
 <body class="bg-gray-900 text-gray-300 font-sans">
   <div class="container mx-auto px-4 py-8 max-w-3xl">
+    <a href="https://baseplay.vercel.app" class="flex items-center text-white text-sm font-semibold mb-4"><i data-feather="arrow-left" class="inline-block mr-2 text-xs"></i> Dashboard</a>
     <h1 class="text-4xl font-bold text-blue-400 mb-6">Baseplay Service Documentation</h1>
 
     <section class="mb-8">
@@ -21,8 +22,7 @@
     <section class="mb-8">
       <h2 class="text-2xl font-semibold text-blue-400 mb-4">Setup</h2>
       <p class="mb-4">To use the Baseplay Service, include the following script tag in your HTML file:</p>
-      <pre
-        class="bg-gray-800 p-4 rounded-md overflow-x-auto"><code class="text-sm text-gray-300">&lt;script id="baseplay-service" src="service.js?gameId=<span id="gameId">YOUR_GAME_ADDRESS</span>"&gt;&lt;/script&gt;</code></pre>
+      <pre class="bg-gray-800 p-4 rounded-md overflow-x-auto"><code class="text-sm text-gray-300">&lt;script id="baseplay-service" src="service.js?gameId=<span id="gameId">YOUR_GAME_ADDRESS</span>"&gt;&lt;/script&gt;</code></pre>
       <p class="mt-4">The <code class="bg-gray-800 px-1 rounded">YOUR_GAME_ADDRESS</code> will be automatically replaced with your actual game contract address.</p>
     </section>
 
@@ -203,7 +203,7 @@ async function displayAllGameAchievements() {
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
-  <script id="baseplay-service" src="service.js?gameId=0x4a7FD0502AC68940128B2D71c9DDeA083d54195C"></script>
+  <script id="baseplay-service" src="service.js?gameId=0x326A2498A19f2AfA60EDECbc49BB785fa4cE3297"></script>
   <script>
     // Get the gameId from the URL parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -217,7 +217,7 @@ async function displayAllGameAchievements() {
     script.src = `service.js?gameId=${gameId}`;
     document.body.appendChild(script);
 
-    feather.replace()
+    feather.replace({ width: 16, height: 16 });
 
     async function connectWallet() {
       const account = await window.baseplayService.connectWallet();

@@ -290,7 +290,7 @@ window.addEventListener('load', async () => {
         console.log(`Achievement ${achievementId} unlocked for ${playerAddress}`);
       } catch (error) {
         console.error("Failed to unlock achievement on chain:", error);
-        showToast("Failed to unlock achievement", "", "Transaction was denied or failed");
+        showToast("Failed to unlock achievement", "https://em-content.zobj.net/source/apple/391/pensive-face_1f614.png", "Transaction was denied or failed");
       }
     }
 
@@ -326,7 +326,7 @@ window.addEventListener('load', async () => {
         console.log(`Achievement ${achievementId} unlocked for ${playerAddress}`);
       } catch (error) {
         console.error("Failed to unlock achievement locally:", error);
-        showToast("Failed to unlock achievement", "", "An error occurred while unlocking the achievement");
+        showToast("Failed to unlock achievement", "https://em-content.zobj.net/source/apple/391/pensive-face_1f614.png", "An error occurred while unlocking the achievement");
       }
     }
 
@@ -506,7 +506,7 @@ window.addEventListener('load', async () => {
         console.log(`Score updated for ${playerAddress}: ${score}`);
       } catch (error) {
         console.error("Failed to update score:", error);
-        showToast("Failed to update score", "", "Transaction was denied or failed");
+        showToast("Failed to update score",'https://em-content.zobj.net/source/apple/391/pensive-face_1f614.png', "Transaction was denied or failed");
       }
     }
 
