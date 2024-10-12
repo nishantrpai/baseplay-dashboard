@@ -38,7 +38,7 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             text-align: center;
         }
-        #saveScore, #loginButton, #restartButton, #save1stAchievement, #save2ndAchievement, #save3rdAchievement {
+        #saveScore, #loginButton, #restartButton, #save1stAchievement, #save2ndAchievement, #save3rdAchievement, #showLeaderboard {
             margin: 10px;
             padding: 15px 30px;
             background-color: #ff9800;
@@ -49,7 +49,7 @@
             font-size: 16px;
             transition: background-color 0.3s;
         }
-        #saveScore:hover, #loginButton:hover, #restartButton:hover {
+        #saveScore:hover, #loginButton:hover, #restartButton:hover, #showLeaderboard:hover {
             background-color: #e68900;
         }
         #loginButton {
@@ -83,6 +83,7 @@
     <button id="save1stAchievement" style="display: none;">Save 1st Achievement on chain</button>
     <button id="save2ndAchievement" style="display: none;">Save 2nd Achievement on chain</button>
     <button id="save3rdAchievement" style="display: none;">Save 3rd Achievement on chain</button>
+    <button id="showLeaderboard">Show Leaderboard</button>
     <div id="score">Score: 0</div>
     <div id="speed">Speed: 2</div>
     <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
@@ -96,6 +97,8 @@
         const restartButton = document.getElementById('restartButton');
         const scoreDiv = document.getElementById('score');
         const speedDiv = document.getElementById('speed');
+        const showLeaderboardButton = document.getElementById('showLeaderboard');
+        showLeaderboardButton.style.display = 'none';
 
         let dino = { x: 50, y: 150, width: 20, height: 20, dy: 0, gravity: 0.5, jumpHeight: -10 };
         let isJumping = false;
@@ -105,15 +108,6 @@
         let enemiesCrossed = 0;
         let achievements = [];
         let gameOver = false;
-
-        async function fetchAchievements() {
-            try {
-                achievements = await window.baseplayService.getAchievements();
-                updateAchievementsDisplay();
-            } catch (error) {
-                console.error('Failed to fetch achievements:', error);
-            }
-        }
 
         async function fetchAllAchievements() {
             try {
@@ -210,9 +204,7 @@
         }
 
         function updateAchievementsDisplay() {
-            // achievementsDiv.innerHTML = achievements.map(achievement => 
-            //     `<div class="achievement">${achievement.name}: ${achievement.unlocked ? 'Unlocked!' : 'Locked'}</div>`
-            // ).join('');
+            // Implement if needed
         }
 
         function gameLoop() {
@@ -231,6 +223,10 @@
             gameOver = true;
             saveScoreButton.style.display = 'block';
             restartButton.style.display = 'block';
+            showLeaderboardButton.style.display = 'block';
+            document.getElementById('save1stAchievement').style.display = 'block';
+            document.getElementById('save2ndAchievement').style.display = 'block';
+            document.getElementById('save3rdAchievement').style.display = 'block';
             checkAchievements();
         }
 
@@ -242,7 +238,7 @@
 
         saveScoreButton.addEventListener('click', async () => {
             try {
-                await window.baseplayService.unlockAchievementOnChain(score);
+                await window.baseplayService.updateScore(Math.floor(score));
                 alert('Score saved on chain!');
             } catch (error) {
                 console.error('Failed to save score:', error);
@@ -256,7 +252,6 @@
                 if (account) {
                     loginButton.textContent = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
                     loginButton.disabled = true;
-                    // fetchAchievements();
                 }
             } catch (error) {
                 console.error('Failed to connect wallet:', error);
@@ -273,9 +268,22 @@
             dino.dy = 0;
             saveScoreButton.style.display = 'none';
             restartButton.style.display = 'none';
+            showLeaderboardButton.style.display = 'none';
+            document.getElementById('save1stAchievement').style.display = 'none';
+            document.getElementById('save2ndAchievement').style.display = 'none';
+            document.getElementById('save3rdAchievement').style.display = 'none';
             scoreDiv.textContent = `Score: ${score}`;
             speedDiv.textContent = `Speed: ${gameSpeed.toFixed(1)}`;
             gameLoop();
+        });
+
+        showLeaderboardButton.addEventListener('click', async () => {
+            try {
+                await window.baseplayService.showLeaderboardToast();
+            } catch (error) {
+                console.error('Failed to show leaderboard:', error);
+                alert('Failed to show leaderboard. Please try again.');
+            }
         });
 
         async function initGame() {
@@ -283,7 +291,6 @@
             if (address) {
                 loginButton.textContent = `Connected: ${address.slice(0, 6)}...${address.slice(-4)}`;
                 loginButton.disabled = true;
-                await fetchAchievements();
             }
             updateAchievementsDisplay();
             gameLoop();
@@ -295,5 +302,4 @@
     </script>
 </body>
 </html>
-<!-- End Generation Here -->
 <!-- End Generation Here -->
