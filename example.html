@@ -15,8 +15,7 @@
 
     <section class="mb-8">
       <h2 class="text-2xl font-semibold text-blue-400 mb-4">Introduction</h2>
-      <p class="mb-4">The Baseplay Service provides a simple way to integrate blockchain-based achievements into your
-        web game. This documentation will guide you through the setup and usage of the service.</p>
+      <p class="mb-4">The Baseplay Service provides a simple way to integrate blockchain-based achievements, leaderboards, and score tracking into your web game. This documentation will guide you through the setup and usage of the service.</p>
     </section>
 
     <section class="mb-8">
@@ -71,12 +70,55 @@
   }
 }</code></pre>
 
+      <h3 class="text-xl font-semibold text-blue-300 mt-6 mb-3">5. Get Achievements</h3>
+      <p class="mb-2">Retrieve all achievements for the connected player:</p>
+      <pre class="bg-gray-800 p-4 rounded-md overflow-x-auto"><code class="text-sm text-gray-300">async function getAchievements() {
+  try {
+    const achievements = await window.baseplayService.getAchievements();
+    console.log("Player achievements:", achievements);
+  } catch (error) {
+    console.error("Failed to get achievements:", error);
+  }
+}</code></pre>
+
+      <h3 class="text-xl font-semibold text-blue-300 mt-6 mb-3">6. Get All Achievements</h3>
+      <p class="mb-2">Retrieve all available achievements in the game:</p>
+      <pre class="bg-gray-800 p-4 rounded-md overflow-x-auto"><code class="text-sm text-gray-300">async function getAllAchievements() {
+  try {
+    const allAchievements = await window.baseplayService.getAllAchievements();
+    console.log("All game achievements:", allAchievements);
+  } catch (error) {
+    console.error("Failed to get all achievements:", error);
+  }
+}</code></pre>
+
+      <h3 class="text-xl font-semibold text-blue-300 mt-6 mb-3">7. Show Leaderboard Toast</h3>
+      <p class="mb-2">Display a toast notification with the current leaderboard:</p>
+      <pre class="bg-gray-800 p-4 rounded-md overflow-x-auto"><code class="text-sm text-gray-300">async function showLeaderboard() {
+  try {
+    await window.baseplayService.showLeaderboardToast();
+  } catch (error) {
+    console.error("Failed to show leaderboard:", error);
+  }
+}</code></pre>
+
+      <h3 class="text-xl font-semibold text-blue-300 mt-6 mb-3">8. Update Score</h3>
+      <p class="mb-2">Update the player's score on the blockchain:</p>
+      <pre class="bg-gray-800 p-4 rounded-md overflow-x-auto"><code class="text-sm text-gray-300">async function updateScore(score) {
+  try {
+    await window.baseplayService.updateScore(score);
+    console.log("Score updated:", score);
+  } catch (error) {
+    console.error("Failed to update score:", error);
+  }
+}</code></pre>
+
       <div class="bg-blue-900 border-l-4 border-blue-400 p-4 mt-4 rounded-md">
         <strong class="text-blue-300">Note:</strong> The <code class="bg-gray-800 px-1 rounded">unlockAchievementLocally</code> and <code class="bg-gray-800 px-1 rounded">unlockAchievementOnChain</code>
         functions will automatically use the connected wallet address as the player address.
       </div>
       <div class="bg-blue-900 border-l-4 border-blue-400 p-4 mt-4 rounded-md">
-        <strong class="text-blue-300">Note:</strong> Once an achievement is unlocked, it cannot be unlocked again. True for example below as well.
+        <strong class="text-blue-300">Note:</strong> Once an achievement is unlocked, it cannot be unlocked again. This applies to the example below as well.
       </div>
 
     </section>
@@ -95,18 +137,38 @@ function onTaskComplete() {
   unlockAchievementLocally(achievementId);
 }
 
-// Unlock an achievement on chain when the player completes a task
-function onTaskCompleteOnChain() {
-  const achievementId = 1; // Replace with your actual achievement ID
+// Unlock an achievement on chain when the player completes a major task
+function onMajorTaskComplete() {
+  const achievementId = 2; // Replace with your actual achievement ID
   unlockAchievementOnChain(achievementId);
+}
+
+// Update player's score
+function onScoreChange(newScore) {
+  updateScore(newScore);
+}
+
+// Show leaderboard when player clicks a button
+function onLeaderboardButtonClick() {
+  showLeaderboard();
+}
+
+// Get all player's achievements
+async function displayPlayerAchievements() {
+  const achievements = await getAchievements();
+  // Display achievements in your UI
+}
+
+// Get all game achievements
+async function displayAllGameAchievements() {
+  const allAchievements = await getAllAchievements();
+  // Display all achievements in your UI
 }</code></pre>
     </section>
 
     <section class="mb-8">
       <h2 class="text-2xl font-semibold text-blue-400 mb-4">Styling</h2>
-      <p class="mb-4">The Baseplay Service includes a default toast notification style for achievement unlocks. You can
-        customize this by overriding the <code class="bg-gray-800 px-1 rounded">.toast</code> CSS class in your own
-        stylesheet.</p>
+      <p class="mb-4">The Baseplay Service includes default styles for toast notifications and the leaderboard. You can customize these by overriding the CSS classes in your own stylesheet.</p>
     </section>
 
     <section class="mb-8">
@@ -118,14 +180,22 @@ function onTaskCompleteOnChain() {
         </button>
         <button id="unlockAchievementBtn"
           class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
-          <i data-feather="award" class="inline-block mr-2"></i>Unlock Achievement Locally
+          <i data-feather="award" class="inline-block mr-2"></i>Unlock Achievement Locally (happens once)
         </button>
         <button id="unlockAchievementOnChainBtn"
           class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded">
           <i data-feather="award" class="inline-block mr-2"></i>Unlock Achievement On Chain
         </button>
-        <button id="viewContractBtn"
+        <button id="showLeaderboardBtn"
           class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded mt-2">
+          <i data-feather="list" class="inline-block mr-2"></i>Show Leaderboard
+        </button>
+        <button id="updateScoreBtn"
+          class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded mt-2">
+          <i data-feather="trending-up" class="inline-block mr-2"></i>Update Score
+        </button>
+        <button id="viewContractBtn"
+          class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded mt-2">
           <i data-feather="eye" class="inline-block mr-2"></i>View Contract on Chain
         </button>
       </div>
@@ -168,6 +238,15 @@ function onTaskCompleteOnChain() {
 
     document.getElementById('unlockAchievementOnChainBtn').addEventListener('click', async () => {
       await window.baseplayService.unlockAchievementOnChain(0);
+    });
+
+    document.getElementById('showLeaderboardBtn').addEventListener('click', async () => {
+      await window.baseplayService.showLeaderboardToast();
+    });
+
+    document.getElementById('updateScoreBtn').addEventListener('click', async () => {
+      const score = Math.floor(Math.random() * 1000); // Random score for demonstration
+      await window.baseplayService.updateScore(score);
     });
 
     document.getElementById('viewContractBtn').addEventListener('click', () => {
