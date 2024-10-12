@@ -8,7 +8,7 @@ You can find this example page for any game in the dashboard as well.
 
 To use the Baseplay Service, include the following script tag in your HTML file:
 ```html
-<script id="baseplay-service" src="service.js?gameId=YOUR_GAME_ADDRESS"></script>
+<script id="baseplay-service" src="https://baseplay.vercel.app/service.js?gameId=YOUR_GAME_ADDRESS"></script>
 ```
 The `YOUR_GAME_ADDRESS` will be automatically replaced with your actual game contract address.
 

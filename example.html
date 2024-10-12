@@ -21,6 +21,7 @@
 
     <section class="mb-8">
       <h2 class="text-2xl font-semibold text-blue-400 mb-4">Setup</h2>
+      <p class="mb-4">Before setting up, you need to create a game in the <a href="https://baseplay.vercel.app" class="text-blue-300 underline">Baseplay Dashboard</a>.</p>
       <p class="mb-4">To use the Baseplay Service, include the following script tag in your HTML file:</p>
       <pre class="bg-gray-800 p-4 rounded-md overflow-x-auto"><code class="text-sm text-gray-300">&lt;script id="baseplay-service" src="https://baseplay.vercel.app/service.js?gameId=<span id="gameId">YOUR_GAME_ADDRESS</span>"&gt;&lt;/script&gt;</code></pre>
       <p class="mt-4">The <code class="bg-gray-800 px-1 rounded">YOUR_GAME_ADDRESS</code> will be automatically replaced with your actual game contract address.</p>
@@ -133,13 +134,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Unlock an achievement locally when the player completes a task
 function onTaskComplete() {
-  const achievementId = 1; // Replace with your actual achievement ID
+  const achievementId = 0; // Replace with your actual achievement ID
   unlockAchievementLocally(achievementId);
 }
 
 // Unlock an achievement on chain when the player completes a major task
 function onMajorTaskComplete() {
-  const achievementId = 2; // Replace with your actual achievement ID
+  const achievementId = 0; // Replace with your actual achievement ID
   unlockAchievementOnChain(achievementId);
 }
 

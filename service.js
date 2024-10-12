@@ -19,6 +19,11 @@ window.addEventListener('load', async () => {
   jdenticonScript.src = 'https://cdn.jsdelivr.net/npm/jdenticon@3.1.0/dist/jdenticon.min.js';
   document.head.appendChild(jdenticonScript);
 
+  // Load Web3.js script
+  const web3Script = document.createElement('script');
+  web3Script.src = 'https://cdn.jsdelivr.net/npm/web3@1.3.6/dist/web3.min.js';
+  document.head.appendChild(web3Script);
+
   const gameAddressElement = document.getElementById('baseplay-service');
   const gameAddress = new URL(gameAddressElement?.src).searchParams.get('gameId') || '';
   console.log(gameAddress);
