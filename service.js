@@ -432,9 +432,10 @@ window.addEventListener('load', async () => {
         // Fetch ENS names for all players
         const playerWithENS = await Promise.all(topPlayers.map(async (player) => {
           const ens = await provider.lookupAddress(player.player);
+          const displayAddress = player.player.slice(0, 6) + '...' + player.player.slice(-4);
           return {
             ...player,
-            ens: ens || player.player
+            ens: ens || displayAddress
           };
         }));
 
@@ -451,8 +452,8 @@ window.addEventListener('load', async () => {
             <tr>
               <td>${index + 1}</td>
               <td>
-                <svg width="20" height="20" data-jdenticon-value="${player.player}"></svg>
-                ${player.ens}
+                <svg width="20" height="20" data-jdenticon-value="${player.player}" alt="${player.ens}"></svg>
+                <a href="https://sepolia.basescan.org/address/${player.player}" target="_blank" rel="noopener noreferrer">${player.ens}</a>
               </td>
               <td><strong>${player.score}</strong></td>
             </tr>
