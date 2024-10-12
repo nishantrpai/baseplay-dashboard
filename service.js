@@ -40,7 +40,40 @@ window.addEventListener('load', async () => {
         await window.ethereum.request({ method: 'eth_requestAccounts' });
 
         if (!isLocal) { 
-          // Check if the user is on the Sepolia chain (chainId 84352)
+          // Check if the user is on the Base Sepolia chain (chainId 84532)
+          const chainId = await web3.eth.getChainId();
+          if (chainId !== 84532n) {
+            try {
+              await window.ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: '0x14a34' }], // 84532 in hexadecimal
+              });
+            } catch (switchError) {
+              // This error code indicates that the chain has not been added to MetaMask
+              if (switchError.code === 4902) {
+                try {
+                  await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                      chainId: '0x14a34',
+                      chainName: 'Base Sepolia Testnet',
+                      nativeCurrency: {
+                        name: 'ETH',
+                        symbol: 'ETH',
+                        decimals: 18
+                      },
+                      rpcUrls: ['https://sepolia.base.org'],
+                      blockExplorerUrls: ['https://sepolia.basescan.org']
+                    }],
+                  });
+                } catch (addError) {
+                  console.error('Failed to add Base Sepolia network:', addError);
+                }
+              } else {
+                console.error('Failed to switch to Base Sepolia network:', switchError);
+              }
+            }
+          }
         }
       } catch (error) {
         console.error("User denied account access or failed to switch chain:", error);
@@ -61,6 +94,46 @@ window.addEventListener('load', async () => {
           console.log("Accounts changed:", accounts);
           window.baseplayService.currentAccount = accounts[0];
         });
+
+        // Check and switch to Base Sepolia if necessary
+        const chainId = await web3.eth.getChainId();
+        if (chainId !== 84532n) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x14a34' }], // 84532 in hexadecimal
+            });
+          } catch (switchError) {
+            if (switchError.code === 4902) {
+              try {
+                await window.ethereum.request({
+                  method: 'wallet_addEthereumChain',
+                  params: [{
+                    chainId: '0x14a34',
+                    chainName: 'Base Sepolia Testnet',
+                    nativeCurrency: {
+                      name: 'ETH',
+                      symbol: 'ETH',
+                      decimals: 18
+                    },
+                    rpcUrls: ['https://sepolia.base.org'],
+                    blockExplorerUrls: ['https://sepolia.basescan.org']
+                  }],
+                });
+
+                // reload the page
+                location.reload();
+              } catch (addError) {
+                console.error('Failed to add Base Sepolia network:', addError);
+                return null;
+              }
+            } else {
+              console.error('Failed to switch to Base Sepolia network:', switchError);
+              return null;
+            }
+          }
+        }
+
         return currentAccount;
       } catch (error) {
         console.error("Failed to connect wallet:", error);
